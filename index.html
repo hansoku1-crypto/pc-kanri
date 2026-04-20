@@ -2,361 +2,467 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>PC管理ツール</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;background:#f5f5f3;color:#1a1a1a}
-#app{max-width:1200px;margin:0 auto;padding:1rem}
-h1{font-size:18px;font-weight:600;margin-bottom:1rem;color:#1a1a1a}
-.filter-card{background:#fff;border:0.5px solid #e0e0da;border-radius:12px;padding:1rem;margin-bottom:1rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;align-items:end}
-.filter-field{display:flex;flex-direction:column;gap:4px}
-.filter-field label{font-size:11px;color:#888}
-.filter-field input,.filter-field select{font-size:13px;border:0.5px solid #d0d0ca;border-radius:6px;padding:5px 8px;background:#fff;color:#1a1a1a;outline:none}
-.filter-field input:focus,.filter-field select:focus{border-color:#666}
-.filter-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;grid-column:1/-1;padding-top:8px;border-top:0.5px solid #eee;margin-top:4px}
-.result-count{font-size:12px;color:#888;margin-left:auto}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:1rem}
-.stat{background:#fff;border:0.5px solid #e0e0da;border-radius:8px;padding:.75rem 1rem}
-.stat-label{font-size:11px;color:#888;margin-bottom:4px}
-.stat-val{font-size:22px;font-weight:600}
+#app{max-width:1300px;margin:0 auto;padding:1rem}
+
+/* ナビ */
+.nav{display:flex;gap:8px;margin-bottom:1rem;border-bottom:1px solid #e0e0da;padding-bottom:.75rem;align-items:center;flex-wrap:wrap}
+.nav h1{font-size:16px;font-weight:700;margin-right:8px}
+.tab{font-size:13px;padding:5px 14px;border:0.5px solid #d0d0ca;border-radius:20px;background:#fff;cursor:pointer;color:#555}
+.tab:hover{background:#f0f0ea}
+.tab.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.nav-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+
+/* フィルター */
+.filter-card{background:#fff;border:0.5px solid #e0e0da;border-radius:12px;padding:1rem;margin-bottom:1rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;align-items:end}
+.ff{display:flex;flex-direction:column;gap:3px}
+.ff label{font-size:11px;color:#888}
+.ff input,.ff select{font-size:13px;border:0.5px solid #d0d0ca;border-radius:6px;padding:5px 8px;background:#fff;color:#1a1a1a;outline:none;width:100%}
+.ff input:focus,.ff select:focus{border-color:#666}
+.filter-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;grid-column:1/-1;padding-top:8px;border-top:0.5px solid #eee;margin-top:2px}
+.rc{font-size:12px;color:#888;margin-left:auto}
+
+/* サマリー */
+.stats{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.stat{background:#fff;border:0.5px solid #e0e0da;border-radius:8px;padding:.5rem .9rem;display:flex;align-items:center;gap:8px}
+.stat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.stat-label{font-size:12px;color:#666}
+.stat-val{font-size:16px;font-weight:700;margin-left:4px}
+
+/* テーブル */
 .tbl-wrap{overflow-x:auto;border:0.5px solid #e0e0da;border-radius:12px;background:#fff;margin-bottom:1rem}
 table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
 th{background:#f8f8f6;padding:8px 10px;text-align:left;font-weight:500;font-size:11px;color:#888;white-space:nowrap;border-bottom:0.5px solid #e0e0da;cursor:pointer;user-select:none}
 th:hover{color:#1a1a1a}
-td{padding:8px 10px;border-bottom:0.5px solid #f0f0ea;vertical-align:top;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#1a1a1a}
+td{padding:8px 10px;border-bottom:0.5px solid #f0f0ea;vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:#fafafa}
-.badge{display:inline-block;font-size:11px;padding:2px 7px;border-radius:10px;white-space:nowrap}
-.badge-ok{background:#EAF3DE;color:#3B6D11}
-.badge-no{background:#F1EFE8;color:#5F5E5A}
-.badge-warn{background:#FAEEDA;color:#854F0B}
-.row-detail td{padding:12px 16px;white-space:normal;background:#fafafa}
-.detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px 20px}
-.detail-item label{font-size:11px;color:#888;display:block;margin-bottom:2px}
-.detail-item span{font-size:13px;word-break:break-all}
-.btn{font-size:12px;padding:5px 12px;border:0.5px solid #d0d0ca;border-radius:6px;background:#fff;cursor:pointer;color:#1a1a1a}
+.row-detail td{padding:12px 16px;white-space:normal;background:#fafafa;border-bottom:0.5px solid #e8e8e4}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px 24px;margin-bottom:12px}
+.di label{font-size:11px;color:#888;display:block;margin-bottom:2px}
+.di span{font-size:13px;word-break:break-all}
+
+/* バッジ */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 8px;border-radius:10px;white-space:nowrap;font-weight:500}
+.badge-dot{width:6px;height:6px;border-radius:50%}
+.s-active{background:#E8F5E9;color:#2E7D32}
+.s-scheduled{background:#E3F2FD;color:#1565C0}
+.s-stock{background:#F3E5F5;color:#6A1B9A}
+.s-prep{background:#FFF8E1;color:#F57F17}
+.s-disposed{background:#EFEBE9;color:#4E342E}
+.s-unknown{background:#FFEBEE;color:#B71C1C}
+.task-lend{background:#FFF3E0;color:#E65100}
+.task-return{background:#E8F5E9;color:#2E7D32}
+.office-ok{background:#EAF3DE;color:#3B6D11}
+.office-no{background:#F1EFE8;color:#5F5E5A}
+
+/* ボタン */
+.btn{font-size:12px;padding:5px 12px;border:0.5px solid #d0d0ca;border-radius:6px;background:#fff;cursor:pointer;color:#1a1a1a;white-space:nowrap}
 .btn:hover{background:#f5f5f3}
 .btn-primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
 .btn-primary:hover{background:#333}
 .btn-danger{color:#c0392b;border-color:#e0a0a0}
 .btn-danger:hover{background:#fdf0f0}
-.sort-arrow{font-size:10px;margin-left:2px}
-.empty{padding:3rem;text-align:center;color:#888}
-.save-ind{font-size:12px;color:#888}
-.save-ind.saving{color:#d4800a}
-.save-ind.saved{color:#3B6D11}
-.save-ind.error{color:#c0392b}
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:100;align-items:center;justify-content:center}
+.btn-sm{font-size:11px;padding:3px 9px}
+
+/* モーダル */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;align-items:flex-start;justify-content:center;padding-top:40px;overflow-y:auto}
 .modal-overlay.open{display:flex}
-.modal{background:#fff;border-radius:12px;padding:1.5rem;width:min(620px,96vw);max-height:90vh;overflow-y:auto;border:0.5px solid #e0e0da}
+.modal{background:#fff;border-radius:12px;padding:1.5rem;width:min(700px,96vw);margin-bottom:40px;border:0.5px solid #e0e0da}
 .modal h2{font-size:16px;font-weight:600;margin-bottom:1rem}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .form-field{display:flex;flex-direction:column;gap:4px}
 .form-field.full{grid-column:1/-1}
 .form-field label{font-size:12px;color:#888}
-.form-field input,.form-field select,.form-field textarea{font-size:13px;border:0.5px solid #d0d0ca;border-radius:6px;padding:6px 8px;background:#fff;color:#1a1a1a;outline:none}
-.form-field input:focus,.form-field select:focus,.form-field textarea:focus{border-color:#666}
-.form-field textarea{resize:vertical;min-height:60px}
-.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem}
+.form-field input,.form-field select,.form-field textarea{font-size:13px;border:0.5px solid #d0d0ca;border-radius:6px;padding:6px 8px;background:#fff;color:#1a1a1a;outline:none;width:100%}
+.form-field textarea{resize:vertical;min-height:56px}
+.form-section{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.05em;grid-column:1/-1;margin-top:8px;padding-top:8px;border-top:0.5px solid #eee}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem;padding-top:1rem;border-top:0.5px solid #eee}
+
+/* マスタ管理 */
+.master-panel{background:#fff;border:0.5px solid #e0e0da;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+.master-panel h3{font-size:14px;font-weight:600;margin-bottom:.75rem}
+.master-list{display:flex;flex-direction:column;gap:4px;margin-bottom:.75rem;max-height:300px;overflow-y:auto}
+.master-item{display:flex;align-items:center;gap:8px;padding:6px 8px;background:#fafafa;border-radius:6px;border:0.5px solid #eee}
+.master-item span{flex:1;font-size:13px}
+.master-add{display:flex;gap:8px;margin-top:4px}
+.master-add input{flex:1;font-size:13px;border:0.5px solid #d0d0ca;border-radius:6px;padding:5px 8px;outline:none}
+
+/* ローディング */
 .loading{padding:3rem;text-align:center;color:#888}
-.spinner{display:inline-block;width:20px;height:20px;border:2px solid #e0e0da;border-top-color:#888;border-radius:50%;animation:spin .7s linear infinite;margin-right:8px;vertical-align:middle}
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid #e0e0da;border-top-color:#888;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
 @keyframes spin{to{transform:rotate(360deg)}}
+.save-ind{font-size:12px;color:#888}
+.save-ind.saving{color:#d4800a}
+.save-ind.saved{color:#3B6D11}
+.save-ind.error{color:#c0392b}
+.sort-arrow{font-size:10px;margin-left:2px}
+.empty{padding:3rem;text-align:center;color:#888}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem}
 </style>
 </head>
 <body>
 <div id="app">
-  <h1>PC管理ツール</h1>
-
-  <div class="filter-card">
-    <div class="filter-field">
-      <label>フリーワード</label>
-      <input type="text" id="f-word" placeholder="製造番号・担当者・店舗..." oninput="render()">
-    </div>
-    <div class="filter-field">
-      <label>メーカー</label>
-      <select id="f-maker" onchange="render()"><option value="">すべて</option></select>
-    </div>
-    <div class="filter-field">
-      <label>Office助成金</label>
-      <select id="f-office" onchange="render()">
-        <option value="">すべて</option>
-        <option value="◯">◯ あり</option>
-        <option value="ー">ー なし</option>
-        <option value="none">未設定</option>
-      </select>
-    </div>
-    <div class="filter-field">
-      <label>受渡日付（開始）</label>
-      <input type="month" id="f-date-from" oninput="render()">
-    </div>
-    <div class="filter-field">
-      <label>受渡日付（終了）</label>
-      <input type="month" id="f-date-to" oninput="render()">
-    </div>
-    <div class="filter-field">
-      <label>状態</label>
-      <select id="f-status" onchange="render()">
-        <option value="">すべて</option>
-        <option value="normal">正常</option>
-        <option value="broken">故障</option>
-        <option value="repair">修理中</option>
-        <option value="discard">廃棄</option>
-      </select>
-    </div>
-    <div class="filter-actions">
-      <button class="btn" onclick="resetFilters()">リセット</button>
-      <button class="btn" onclick="openAdd()">＋ 新規登録</button>
-      <button class="btn" onclick="loadData()" title="スプレッドシートから再読み込み">↺ 再読み込み</button>
+  <div class="nav">
+    <h1>PC管理ツール</h1>
+    <button class="tab active" onclick="showTab('list')">ハードウェア</button>
+    <button class="tab" onclick="showTab('dept')">部署マスタ</button>
+    <button class="tab" onclick="showTab('pos')">役職マスタ</button>
+    <div class="nav-right">
+      <button class="btn" onclick="loadAll()" title="再読み込み">↺ 再読み込み</button>
       <span class="save-ind" id="save-ind"></span>
-      <span class="result-count" id="result-count"></span>
     </div>
   </div>
 
-  <div class="stats" id="stats"></div>
+  <!-- ハードウェア一覧タブ -->
+  <div id="tab-list">
+    <div class="filter-card">
+      <div class="ff"><label>フリーワード</label><input type="text" id="f-word" placeholder="シリアル番号・ID・ユーザー..." oninput="render()"></div>
+      <div class="ff"><label>ステータス</label>
+        <select id="f-status" onchange="render()">
+          <option value="">すべて</option>
+          <option>利用中</option><option>利用予定</option><option>在庫</option>
+          <option>準備中</option><option>廃棄・解約</option><option>所在不明</option>
+        </select>
+      </div>
+      <div class="ff"><label>管理者のタスク</label>
+        <select id="f-task" onchange="render()"><option value="">すべて</option></select>
+      </div>
+      <div class="ff"><label>調達方法</label>
+        <select id="f-procurement" onchange="render()"><option value="">すべて</option></select>
+      </div>
+      <div class="ff"><label>メーカー</label>
+        <select id="f-maker" onchange="render()"><option value="">すべて</option></select>
+      </div>
+      <div class="ff"><label>利用開始日（から）</label><input type="month" id="f-start-from" oninput="render()"></div>
+      <div class="ff"><label>利用開始日（まで）</label><input type="month" id="f-start-to" oninput="render()"></div>
+      <div class="ff"><label>購入/契約開始日（から）</label><input type="month" id="f-buy-from" oninput="render()"></div>
+      <div class="ff"><label>契約更新日（まで）</label><input type="month" id="f-renew-to" oninput="render()"></div>
+      <div class="filter-actions">
+        <button class="btn" onclick="resetFilters()">リセット</button>
+        <button class="btn btn-primary" onclick="openAdd()">＋ 新規登録</button>
+        <span class="rc" id="result-count"></span>
+      </div>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th style="width:32px"></th>
+          <th style="width:130px" onclick="setSort('シリアル番号')">シリアル番号<span class="sort-arrow" id="s-シリアル番号"></span></th>
+          <th style="width:110px" onclick="setSort('ID(PC名)')">ID(PC名)<span class="sort-arrow" id="s-ID(PC名)"></span></th>
+          <th style="width:90px" onclick="setSort('ステータス')">ステータス<span class="sort-arrow" id="s-ステータス"></span></th>
+          <th onclick="setSort('ユーザー')">ユーザー<span class="sort-arrow" id="s-ユーザー"></span></th>
+          <th style="width:90px" onclick="setSort('管理者のタスク')">タスク<span class="sort-arrow" id="s-管理者のタスク"></span></th>
+          <th style="width:90px" onclick="setSort('利用開始日')">利用開始日<span class="sort-arrow" id="s-利用開始日"></span></th>
+          <th style="width:90px">メーカー</th>
+          <th style="width:70px">操作</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
 
-  <div class="tbl-wrap">
-    <table>
-      <thead><tr>
-        <th style="width:32px"></th>
-        <th style="width:110px" onclick="setSort('makerNorm')">メーカー<span class="sort-arrow" id="s-makerNorm"></span></th>
-        <th style="width:140px" onclick="setSort('製造番号')">製造番号<span class="sort-arrow" id="s-製造番号"></span></th>
-        <th style="width:90px" onclick="setSort('受渡日付')">受渡日付<span class="sort-arrow" id="s-受渡日付"></span></th>
-        <th style="width:90px">PC名</th>
-        <th onclick="setSort('担当者・店舗')">担当者・店舗<span class="sort-arrow" id="s-担当者・店舗"></span></th>
-        <th style="width:80px">Office</th>
-        <th style="width:70px">操作</th>
-      </tr></thead>
-      <tbody id="tbody"></tbody>
-    </table>
+  <!-- 部署マスタタブ -->
+  <div id="tab-dept" style="display:none">
+    <div class="master-panel">
+      <div class="section-header">
+        <h3>部署マスタ</h3>
+        <button class="btn btn-primary btn-sm" onclick="saveMaster('dept')">保存</button>
+      </div>
+      <div class="master-list" id="dept-list"></div>
+      <div class="master-add">
+        <input type="text" id="dept-new" placeholder="新しい部署名を入力...">
+        <button class="btn" onclick="addMasterItem('dept')">追加</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 役職マスタタブ -->
+  <div id="tab-pos" style="display:none">
+    <div class="master-panel">
+      <div class="section-header">
+        <h3>役職マスタ</h3>
+        <button class="btn btn-primary btn-sm" onclick="saveMaster('pos')">保存</button>
+      </div>
+      <div class="master-list" id="pos-list"></div>
+      <div class="master-add">
+        <input type="text" id="pos-new" placeholder="新しい役職名を入力...">
+        <button class="btn" onclick="addMasterItem('pos')">追加</button>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- Modal -->
+<!-- モーダル -->
 <div class="modal-overlay" id="modal-overlay" onclick="onOverlayClick(event)">
   <div class="modal" id="modal-content"></div>
 </div>
 
 <script>
 const GAS_URL = 'https://script.google.com/macros/s/AKfycby11ubaJ5zmNlNvP_iXxQofudIlkbtaugltwSdgfqBq3sEkcs5eWUf6ukFo8V6eHUqU/exec';
-const HEADERS = ['メーカー','製造番号','受渡日付','PC名','担当者・店舗','Office助成金','Officeアカウント','Officeパス','Microsoftアカウント','Microsoftパス','PIN','メモ','Office追加日'];
 
-let data = [], sortKey = '受渡日付', sortDir = -1, expanded = new Set();
+// デフォルト選択肢（スプレッドシートから取得したものとマージ）
+const DEFAULT_TASKS        = ['貸出','返却','なし'];
+const DEFAULT_PROCUREMENT  = ['購入','リース契約','レンタル'];
+const STATUS_LIST          = ['利用中','利用予定','在庫','準備中','廃棄・解約','所在不明'];
 
-function normMaker(s) {
-  if (!s) return '';
-  const t = s.trim().toUpperCase();
-  if (t.startsWith('LENOVO')) return 'Lenovo';
-  if (t.startsWith('DELL')) return 'DELL';
-  if (t.startsWith('HP')) return 'HP';
-  if (t.includes('マウス') || t.includes('MOUSE')) return 'マウスコンピュータ';
-  return s.trim();
+let pcData = [], depts = [], positions = [];
+let taskOptions = [...DEFAULT_TASKS];
+let procOptions = [...DEFAULT_PROCUREMENT];
+let sortKey = '利用開始日', sortDir = -1, expanded = new Set();
+
+// ── ステータス色 ──
+const STATUS_CLASS = {
+  '利用中':'s-active','利用予定':'s-scheduled','在庫':'s-stock',
+  '準備中':'s-prep','廃棄・解約':'s-disposed','所在不明':'s-unknown'
+};
+const STATUS_COLOR = {
+  '利用中':'#4CAF50','利用予定':'#2196F3','在庫':'#9C27B0',
+  '準備中':'#FF9800','廃棄・解約':'#795548','所在不明':'#F44336'
+};
+
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function normDate(s){ if(!s)return''; const d=s.trim(); if(/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(d)){const p=d.split('/');return`${p[0]}-${p[1].padStart(2,'0')}-${p[2].padStart(2,'0')}`;} if(/^\d{8}$/.test(d))return`${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`; return d; }
+function normMaker(s){ if(!s)return''; const t=s.trim().toUpperCase(); if(t.startsWith('LENOVO'))return'Lenovo'; if(t.startsWith('DELL'))return'DELL'; if(t.startsWith('HP'))return'HP'; if(t.includes('マウス')||t.includes('MOUSE'))return'マウスコンピュータ'; return s.trim(); }
+
+function showInd(state, msg){ const el=document.getElementById('save-ind'); el.className='save-ind '+state; el.textContent=msg||''; if(state==='saved')setTimeout(()=>{el.textContent='';el.className='save-ind';},3000); }
+
+// ── タブ ──
+function showTab(name){
+  ['list','dept','pos'].forEach(t=>{ document.getElementById('tab-'+t).style.display=t===name?'':'none'; });
+  document.querySelectorAll('.tab').forEach((el,i)=>{ el.classList.toggle('active',['list','dept','pos'][i]===name); });
 }
 
-function esc(s) {
-  return (s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
+// ── データ読み込み ──
+async function gasGet(action){ const res=await fetch(GAS_URL+'?action='+action); return res.json(); }
+async function gasPost(action,data){ const res=await fetch(GAS_URL+'?action='+action+'&data='+encodeURIComponent(JSON.stringify(data))); return res.json(); }
 
-function normDate(s) {
-  if (!s) return '';
-  const d = s.trim();
-  if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(d)) { const p = d.split('/'); return `${p[0]}-${p[1].padStart(2,'0')}-${p[2].padStart(2,'0')}`; }
-  if (/^\d{8}$/.test(d)) return `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`;
-  return d;
-}
-
-function getStatus(r) {
-  const u = (r['担当者・店舗'] || '') + ' ' + (r['メモ'] || '');
-  if (/破棄|処分/.test(u)) return 'discard';
-  if (/修理/.test(u)) return 'repair';
-  if (/故障|初期不良/.test(u)) return 'broken';
-  return 'normal';
-}
-
-function showInd(state, msg) {
-  const el = document.getElementById('save-ind');
-  el.className = 'save-ind ' + state;
-  el.textContent = msg || '';
-}
-
-async function loadData() {
-  document.getElementById('tbody').innerHTML = '<tr><td colspan="8" class="loading"><span class="spinner"></span>スプレッドシートから読み込み中...</td></tr>';
-  showInd('saving', '読み込み中...');
+async function loadAll(){
+  showInd('saving','読み込み中...');
+  document.getElementById('tbody').innerHTML='<tr><td colspan="9" class="loading"><span class="spinner"></span>読み込み中...</td></tr>';
   try {
-    const res = await fetch(GAS_URL + '?action=getAll');
-    const json = await res.json();
-    if (json.error) throw new Error(json.error);
-    data = json.map((r, i) => ({ _id: i, ...r, makerNorm: normMaker(r['メーカー']) }));
-    showInd('saved', '読み込み完了');
-    setTimeout(() => showInd('', ''), 2000);
-    initMakerFilter();
+    const [pc, dept, pos] = await Promise.all([gasGet('getAll'), gasGet('getDepts'), gasGet('getPositions')]);
+    if(pc.error) throw new Error(pc.error);
+    pcData = (Array.isArray(pc)?pc:[]).map((r,i)=>({_id:i,...r,_makerNorm:normMaker(r['メーカー'])}));
+    depts = Array.isArray(dept)?dept:[];
+    positions = Array.isArray(pos)?pos:[];
+    // タスク・調達方法は既存データから収集してデフォルトとマージ
+    const allTasks = new Set([...DEFAULT_TASKS,...pcData.map(r=>r['管理者のタスク']).filter(Boolean)]);
+    const allProc  = new Set([...DEFAULT_PROCUREMENT,...pcData.map(r=>r['調達方法']).filter(Boolean)]);
+    taskOptions = [...allTasks];
+    procOptions = [...allProc];
+    initFilters();
+    renderMasterList('dept');
+    renderMasterList('pos');
     render();
-  } catch (e) {
-    showInd('error', 'エラー: ' + e.message);
-    document.getElementById('tbody').innerHTML = `<tr><td colspan="8" class="empty">読み込みに失敗しました: ${esc(e.message)}</td></tr>`;
-  }
+    showInd('saved','読み込み完了');
+  } catch(e){ showInd('error','エラー: '+e.message); }
 }
 
-async function saveData() {
-  showInd('saving', '保存中...');
+async function savePC(){
+  showInd('saving','保存中...');
   try {
-    const payload = data.map(r => {
-      const rec = {};
-      HEADERS.forEach(h => { rec[h] = r[h] || ''; });
-      return rec;
-    });
-    const res = await fetch(GAS_URL + '?action=save&data=' + encodeURIComponent(JSON.stringify(payload)));
-    const json = await res.json();
-    if (json.error) throw new Error(json.error);
-    showInd('saved', `保存済み ✓ (${json.saved}件)`);
-    setTimeout(() => showInd('', ''), 3000);
-  } catch (e) {
-    showInd('error', '保存エラー: ' + e.message);
-  }
+    const payload = pcData.map(r=>{ const rec={}; Object.keys(r).filter(k=>!k.startsWith('_')).forEach(k=>{rec[k]=r[k]||'';}); return rec; });
+    const res = await gasPost('saveAll', payload);
+    if(res.error) throw new Error(res.error);
+    showInd('saved',`保存済み ✓ (${res.saved}件)`);
+  } catch(e){ showInd('error','保存エラー: '+e.message); }
 }
 
-function initMakerFilter() {
-  const mf = document.getElementById('f-maker');
-  const cur = mf.value;
-  while (mf.options.length > 1) mf.remove(1);
-  [...new Set(data.map(r => r.makerNorm).filter(Boolean))].sort().forEach(m => {
-    const o = document.createElement('option'); o.value = m; o.textContent = m;
-    if (m === cur) o.selected = true; mf.appendChild(o);
-  });
+// ── フィルター初期化 ──
+function initFilters(){
+  fillSelect('f-task', taskOptions);
+  fillSelect('f-procurement', procOptions);
+  const makers = [...new Set(pcData.map(r=>r._makerNorm).filter(Boolean))].sort();
+  fillSelect('f-maker', makers);
 }
+function fillSelect(id, opts){ const el=document.getElementById(id); const cur=el.value; while(el.options.length>1)el.remove(1); opts.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;if(v===cur)o.selected=true;el.appendChild(o);}); }
 
-function resetFilters() {
-  ['f-word','f-date-from','f-date-to'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
-  ['f-maker','f-office','f-status'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+function resetFilters(){
+  ['f-word','f-start-from','f-start-to','f-buy-from','f-renew-to'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['f-status','f-task','f-procurement','f-maker'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   render();
 }
 
-function setSort(k) { if (sortKey===k) sortDir*=-1; else { sortKey=k; sortDir=-1; } render(); }
+// ── フィルター・ソート ──
+function setSort(k){ if(sortKey===k)sortDir*=-1; else{sortKey=k;sortDir=-1;} render(); }
 
-function statusBadge(r) {
-  const st = getStatus(r);
-  if (st==='broken') return '<span class="badge badge-warn">故障</span>';
-  if (st==='discard') return '<span class="badge badge-no">廃棄</span>';
-  if (st==='repair') return '<span class="badge badge-warn">修理中</span>';
-  return '';
-}
-function officeBadge(v) {
-  if (v==='◯') return '<span class="badge badge-ok">◯ あり</span>';
-  if (v==='ー') return '<span class="badge badge-no">ー なし</span>';
-  return '<span class="badge badge-no">未設定</span>';
-}
-
-function getFiltered() {
-  const q = (document.getElementById('f-word')||{value:''}).value.toLowerCase();
-  const mk = (document.getElementById('f-maker')||{value:''}).value;
-  const of = (document.getElementById('f-office')||{value:''}).value;
-  const df = (document.getElementById('f-date-from')||{value:''}).value;
-  const dt = (document.getElementById('f-date-to')||{value:''}).value;
-  const st = (document.getElementById('f-status')||{value:''}).value;
-  return data.filter(r => {
-    if (q && !(([r['メーカー'],r['製造番号'],r['担当者・店舗'],r['PC名'],r['Microsoftアカウント'],r['Officeアカウント'],r['メモ']].join('')).toLowerCase().includes(q))) return false;
-    if (mk && r.makerNorm !== mk) return false;
-    if (of) { if (of==='none'&&r['Office助成金']) return false; if (of!=='none'&&r['Office助成金']!==of) return false; }
-    if (st && getStatus(r) !== st) return false;
-    if (df || dt) {
-      const nd = normDate(r['受渡日付']); const ym = nd.substring(0, 7);
-      if (!ym) return !(df||dt);
-      if (df && ym < df) return false;
-      if (dt && ym > dt) return false;
-    }
+function getFiltered(){
+  const q=(document.getElementById('f-word')||{value:''}).value.toLowerCase();
+  const st=v('f-status'), tk=v('f-task'), pc2=v('f-procurement'), mk=v('f-maker');
+  const sf=v('f-start-from'), st2=v('f-start-to'), bf=v('f-buy-from'), rt=v('f-renew-to');
+  return pcData.filter(r=>{
+    if(q&&!(['シリアル番号','ID(PC名)','ユーザー','メールアドレス','メーカー','管理者のタスク','メモ'].map(k=>r[k]||'').join('')).toLowerCase().includes(q))return false;
+    if(st&&r['ステータス']!==st)return false;
+    if(tk&&r['管理者のタスク']!==tk)return false;
+    if(pc2&&r['調達方法']!==pc2)return false;
+    if(mk&&r._makerNorm!==mk)return false;
+    if(sf||st2){const ym=normDate(r['利用開始日']).substring(0,7); if(sf&&ym&&ym<sf)return false; if(st2&&ym&&ym>st2)return false;}
+    if(bf){const ym=normDate(r['購入/契約開始日']).substring(0,7); if(ym&&ym<bf)return false;}
+    if(rt){const ym=normDate(r['契約更新日']).substring(0,7); if(ym&&ym>rt)return false;}
     return true;
-  }).sort((a, b) => {
-    const va = a[sortKey] || '', vb = b[sortKey] || '';
-    return va < vb ? -sortDir : va > vb ? sortDir : 0;
-  });
+  }).sort((a,b)=>{ const va=a[sortKey]||'',vb=b[sortKey]||''; return va<vb?-sortDir:va>vb?sortDir:0; });
 }
+function v(id){ const el=document.getElementById(id); return el?el.value:''; }
 
-function render() {
+// ── レンダリング ──
+function render(){
   const rows = getFiltered();
-  const total = data.length;
-  const withOffice = data.filter(r => r['Office助成金']==='◯').length;
-  const broken = data.filter(r => ['broken','repair'].includes(getStatus(r))).length;
-  document.getElementById('stats').innerHTML = `
-    <div class="stat"><div class="stat-label">総台数</div><div class="stat-val">${total}</div></div>
-    <div class="stat"><div class="stat-label">助成金Office</div><div class="stat-val">${withOffice}</div></div>
-    <div class="stat"><div class="stat-label">故障・修理中</div><div class="stat-val">${broken}</div></div>
-    <div class="stat"><div class="stat-label">表示中</div><div class="stat-val">${rows.length}</div></div>`;
-  document.getElementById('result-count').textContent = rows.length < total ? `${total}件中 ${rows.length}件` : '';
-  const sortKeys = ['makerNorm','製造番号','受渡日付','担当者・店舗'];
-  sortKeys.forEach(k => { const el = document.getElementById('s-'+k); if(el) el.textContent = sortKey===k ? (sortDir>0?'▲':'▼') : ''; });
+  // サマリー
+  const counts = {};
+  STATUS_LIST.forEach(s=>counts[s]=0);
+  pcData.forEach(r=>{ if(counts[r['ステータス']]!==undefined)counts[r['ステータス']]++; });
+  document.getElementById('stats').innerHTML = STATUS_LIST.map(s=>`
+    <div class="stat">
+      <div class="stat-dot" style="background:${STATUS_COLOR[s]}"></div>
+      <span class="stat-label">${s}</span>
+      <span class="stat-val">${counts[s]}</span>
+    </div>`).join('') + `<div class="stat"><span class="stat-label">合計</span><span class="stat-val">${pcData.length}</span></div>`;
+  document.getElementById('result-count').textContent = rows.length<pcData.length?`${pcData.length}件中 ${rows.length}件表示`:'';
 
-  const tbody = document.getElementById('tbody');
-  if (!rows.length) { tbody.innerHTML = `<tr><td colspan="8" class="empty">該当するPCが見つかりません</td></tr>`; return; }
+  // ソート矢印
+  ['シリアル番号','ID(PC名)','ステータス','ユーザー','管理者のタスク','利用開始日'].forEach(k=>{
+    const el=document.getElementById('s-'+k); if(el)el.textContent=sortKey===k?(sortDir>0?'▲':'▼'):'';
+  });
 
-  tbody.innerHTML = rows.map(r => {
-    const badge = statusBadge(r);
-    const detail = expanded.has(r._id) ? `<tr class="row-detail"><td colspan="8">
+  const tbody=document.getElementById('tbody');
+  if(!rows.length){tbody.innerHTML=`<tr><td colspan="9" class="empty">該当するPCが見つかりません</td></tr>`;return;}
+
+  tbody.innerHTML=rows.map(r=>{
+    const sc=STATUS_CLASS[r['ステータス']]||'';
+    const statusBadge=r['ステータス']?`<span class="badge ${sc}"><span class="badge-dot" style="background:${STATUS_COLOR[r['ステータス']]||'#999'}"></span>${esc(r['ステータス'])}</span>`:'—';
+    const taskBadge=r['管理者のタスク']&&r['管理者のタスク']!=='なし'?`<span class="badge ${r['管理者のタスク']==='貸出'?'task-lend':'task-return'}">${esc(r['管理者のタスク'])}</span>`:r['管理者のタスク']||'—';
+    const detail=expanded.has(r._id)?`<tr class="row-detail"><td colspan="9">
       <div class="detail-grid">
-        ${HEADERS.map(h => `<div class="detail-item"><label>${esc(h)}</label><span>${esc(r[h])||'—'}</span></div>`).join('')}
+        <div class="di"><label>シリアル番号</label><span>${esc(r['シリアル番号'])||'—'}</span></div>
+        <div class="di"><label>ID(PC名)</label><span>${esc(r['ID(PC名)'])||'—'}</span></div>
+        <div class="di"><label>ステータス</label><span>${esc(r['ステータス'])||'—'}</span></div>
+        <div class="di"><label>ユーザー</label><span>${esc(r['ユーザー'])||'—'}</span></div>
+        <div class="di"><label>メールアドレス</label><span>${esc(r['メールアドレス'])||'—'}</span></div>
+        <div class="di"><label>管理者のタスク</label><span>${esc(r['管理者のタスク'])||'—'}</span></div>
+        <div class="di"><label>利用開始日</label><span>${esc(r['利用開始日'])||'—'}</span></div>
+        <div class="di"><label>利用終了日</label><span>${esc(r['利用終了日'])||'—'}</span></div>
+        <div class="di"><label>ハードウェア割当</label><span>${esc(r['ハードウェア割当'])||'—'}</span></div>
+        <div class="di"><label>管理グループ</label><span>${esc(r['管理グループ'])||'—'}</span></div>
+        <div class="di"><label>管理者(メールアドレス)</label><span>${esc(r['管理者(メールアドレス)'])||'—'}</span></div>
+        <div class="di"><label>調達方法</label><span>${esc(r['調達方法'])||'—'}</span></div>
+        <div class="di"><label>支払い周期</label><span>${esc(r['支払い周期'])||'—'}</span></div>
+        <div class="di"><label>購入/利用料金</label><span>${esc(r['購入/利用料金'])||'—'} ${esc(r['通貨'])||''}</span></div>
+        <div class="di"><label>購入/契約開始日</label><span>${esc(r['購入/契約開始日'])||'—'}</span></div>
+        <div class="di"><label>廃棄日/解約日</label><span>${esc(r['廃棄日/解約日'])||'—'}</span></div>
+        <div class="di"><label>契約更新日</label><span>${esc(r['契約更新日'])||'—'}</span></div>
+        <div class="di"><label>メーカー</label><span>${esc(r['メーカー'])||'—'}</span></div>
+        <div class="di"><label>Officeアカウント</label><span>${esc(r['Officeアカウント'])||'—'}</span></div>
+        <div class="di"><label>Officeパス</label><span>${esc(r['Officeパス'])||'—'}</span></div>
+        <div class="di"><label>Microsoftアカウント</label><span>${esc(r['Microsoftアカウント'])||'—'}</span></div>
+        <div class="di"><label>Microsoftパス</label><span>${esc(r['Microsoftパス'])||'—'}</span></div>
+        <div class="di"><label>PIN</label><span>${esc(r['PIN'])||'—'}</span></div>
+        <div class="di"><label>Office助成金</label><span>${esc(r['Office助成金'])||'—'}</span></div>
+        <div class="di"><label>Office追加日</label><span>${esc(r['Office追加日'])||'—'}</span></div>
+        <div class="di" style="grid-column:1/-1"><label>メモ</label><span>${esc(r['メモ'])||'—'}</span></div>
       </div>
-      <div style="margin-top:10px;display:flex;gap:8px">
-        <button class="btn" onclick="openEdit(${r._id});event.stopPropagation()">編集</button>
-        <button class="btn btn-danger" onclick="confirmDelete(${r._id});event.stopPropagation()">削除</button>
-        <button class="btn" onclick="toggleRow(${r._id});event.stopPropagation()">閉じる</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm" onclick="openEdit(${r._id});event.stopPropagation()">編集</button>
+        <button class="btn btn-sm btn-danger" onclick="confirmDelete(${r._id});event.stopPropagation()">削除</button>
+        <button class="btn btn-sm" onclick="toggleRow(${r._id});event.stopPropagation()">閉じる</button>
       </div>
-    </td></tr>` : '';
+    </td></tr>`:'';
     return `<tr onclick="toggleRow(${r._id})" style="cursor:pointer">
-      <td style="text-align:center">${expanded.has(r._id)?'▾':'▸'}</td>
-      <td>${esc(r.makerNorm)||'—'}</td>
-      <td style="font-family:monospace;font-size:12px">${esc((r['製造番号']||'—').substring(0,22))}</td>
-      <td style="font-size:12px">${esc(r['受渡日付'])||'—'}</td>
-      <td style="font-size:12px">${esc(r['PC名'])||'—'}</td>
-      <td>${esc((r['担当者・店舗']||'—').substring(0,30))}${badge?' '+badge:''}</td>
-      <td>${officeBadge(r['Office助成金'])}</td>
-      <td onclick="event.stopPropagation()"><button class="btn" onclick="openEdit(${r._id})">編集</button></td>
+      <td style="text-align:center;color:#aaa">${expanded.has(r._id)?'▾':'▸'}</td>
+      <td style="font-family:monospace;font-size:12px">${esc((r['シリアル番号']||'—').substring(0,18))}</td>
+      <td style="font-size:12px">${esc(r['ID(PC名)'])||'—'}</td>
+      <td>${statusBadge}</td>
+      <td>${esc((r['ユーザー']||'—').substring(0,20))}</td>
+      <td>${taskBadge}</td>
+      <td style="font-size:12px">${esc(r['利用開始日'])||'—'}</td>
+      <td style="font-size:12px">${esc(r._makerNorm)||'—'}</td>
+      <td onclick="event.stopPropagation()"><button class="btn btn-sm" onclick="openEdit(${r._id})">編集</button></td>
     </tr>${detail}`;
   }).join('');
 }
 
-function toggleRow(id) { if(expanded.has(id)) expanded.delete(id); else expanded.add(id); render(); }
+function toggleRow(id){ if(expanded.has(id))expanded.delete(id); else expanded.add(id); render(); }
 
-function openEdit(id) { const r = data.find(x => x._id===id); if(r) showModal(r, false); }
-function openAdd() { showModal({ _id: Date.now() }, true); }
+// ── 編集モーダル ──
+const FIELDS = [
+  {sec:'基本情報'},
+  {k:'シリアル番号',full:false},{k:'ID(PC名)',full:false},{k:'メーカー',full:false},
+  {k:'ステータス',type:'select',opts:STATUS_LIST,full:false},
+  {k:'管理者のタスク',type:'select_dynamic',opt:'task',full:false},
+  {k:'ハードウェア割当',full:false},{k:'管理グループ',full:false},
+  {sec:'利用者情報'},
+  {k:'ユーザー',full:false},{k:'メールアドレス',full:true},
+  {k:'利用開始日',full:false},{k:'利用終了日',full:false},
+  {sec:'管理者'},
+  {k:'管理者(メールアドレス)',full:true},
+  {sec:'調達・費用'},
+  {k:'調達方法',type:'select_dynamic',opt:'proc',full:false},
+  {k:'支払い周期',full:false},{k:'購入/利用料金',full:false},{k:'通貨',full:false},
+  {k:'購入/契約開始日',full:false},{k:'廃棄日/解約日',full:false},{k:'契約更新日',full:false},
+  {sec:'アカウント情報'},
+  {k:'Officeアカウント',full:true},{k:'Officeパス',full:false},
+  {k:'Microsoftアカウント',full:true},{k:'Microsoftパス',full:false},
+  {k:'PIN',full:false},{k:'Office助成金',type:'select',opts:['','◯','ー'],full:false},{k:'Office追加日',full:false},
+  {sec:'その他'},
+  {k:'メモ',type:'textarea',full:true},
+];
 
-function showModal(r, isNew) {
-  document.getElementById('modal-content').innerHTML = `
-    <h2>${isNew ? '新規PC登録' : 'PC情報を編集'}</h2>
-    <div class="form-grid">
-      ${HEADERS.map(h => {
-        const isLong = ['担当者・店舗','Officeアカウント','Microsoftアカウント','メモ'].includes(h);
-        const isSelect = h === 'Office助成金';
-        const val = esc(r[h] || '');
-        if (isSelect) return `<div class="form-field"><label>${esc(h)}</label><select id="fm-${esc(h)}"><option value="">未設定</option><option value="◯"${r[h]==='◯'?' selected':''}>◯ あり</option><option value="ー"${r[h]==='ー'?' selected':''}>ー なし</option></select></div>`;
-        if (isLong) return `<div class="form-field full"><label>${esc(h)}</label><input id="fm-${esc(h)}" value="${val}"></div>`;
-        return `<div class="form-field"><label>${esc(h)}</label><input id="fm-${esc(h)}" value="${val}"></div>`;
-      }).join('')}
-    </div>
+function openAdd(){ showModal({_id:Date.now()},true); }
+function openEdit(id){ const r=pcData.find(x=>x._id===id); if(r)showModal(r,false); }
+
+function showModal(r,isNew){
+  const rows=FIELDS.map(f=>{
+    if(f.sec)return`<div class="form-section">${esc(f.sec)}</div>`;
+    const val=esc(r[f.k]||'');
+    const cls='form-field'+(f.full?' full':'');
+    let input='';
+    if(f.type==='select'){
+      input=`<select id="fm-${esc(f.k)}">${f.opts.map(o=>`<option value="${esc(o)}"${r[f.k]===o?' selected':''}>${esc(o)||'未設定'}</option>`).join('')}</select>`;
+    } else if(f.type==='select_dynamic'){
+      const opts=f.opt==='task'?taskOptions:procOptions;
+      input=`<select id="fm-${esc(f.k)}"><option value="">未設定</option>${opts.map(o=>`<option value="${esc(o)}"${r[f.k]===o?' selected':''}>${esc(o)}</option>`).join('')}</select>`;
+    } else if(f.type==='textarea'){
+      input=`<textarea id="fm-${esc(f.k)}">${val}</textarea>`;
+    } else {
+      input=`<input id="fm-${esc(f.k)}" value="${val}">`;
+    }
+    return`<div class="${cls}"><label>${esc(f.k)}</label>${input}</div>`;
+  }).join('');
+
+  document.getElementById('modal-content').innerHTML=`
+    <h2>${isNew?'新規PC登録':'PC情報を編集'}</h2>
+    <div class="form-grid">${rows}</div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal()">キャンセル</button>
-      <button class="btn btn-primary" onclick="saveRecord(${r._id}, ${isNew})">保存してスプレッドシートに反映</button>
+      <button class="btn btn-primary" onclick="saveRecord(${r._id},${isNew})">保存してスプレッドシートに反映</button>
     </div>`;
   document.getElementById('modal-overlay').classList.add('open');
 }
 
-function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
-function onOverlayClick(e) { if(e.target===document.getElementById('modal-overlay')) closeModal(); }
+function closeModal(){ document.getElementById('modal-overlay').classList.remove('open'); }
+function onOverlayClick(e){ if(e.target===document.getElementById('modal-overlay'))closeModal(); }
 
-async function saveRecord(id, isNew) {
-  const rec = { _id: id };
-  HEADERS.forEach(h => { const el = document.getElementById('fm-' + h); rec[h] = el ? el.value : ''; });
-  rec.makerNorm = normMaker(rec['メーカー']);
-  if (isNew) { data.push(rec); }
-  else { const i = data.findIndex(x => x._id===id); if(i>=0) data[i]=rec; }
-  closeModal(); initMakerFilter(); render();
-  await saveData();
+async function saveRecord(id,isNew){
+  const rec={_id:id};
+  FIELDS.filter(f=>f.k).forEach(f=>{ const el=document.getElementById('fm-'+f.k); rec[f.k]=el?el.value:''; });
+  rec._makerNorm=normMaker(rec['メーカー']);
+  if(isNew)pcData.push(rec);
+  else{ const i=pcData.findIndex(x=>x._id===id); if(i>=0)pcData[i]=rec; }
+  closeModal(); initFilters(); render();
+  await savePC();
 }
 
-function confirmDelete(id) {
-  const r = data.find(x => x._id===id); if(!r) return;
-  document.getElementById('modal-content').innerHTML = `
+function confirmDelete(id){
+  const r=pcData.find(x=>x._id===id); if(!r)return;
+  document.getElementById('modal-content').innerHTML=`
     <h2>削除の確認</h2>
-    <p style="font-size:14px;margin-bottom:.75rem;color:#888">以下のPCを削除します。スプレッドシートからも削除されます。</p>
-    <p style="font-size:14px;font-weight:600;margin-bottom:1.5rem">${esc(r.makerNorm)||'—'} / ${esc(r['製造番号'])||'—'} — ${esc(r['担当者・店舗'])||'—'}</p>
+    <p style="font-size:14px;color:#888;margin-bottom:.75rem">以下のPCをスプレッドシートから削除します。</p>
+    <p style="font-size:14px;font-weight:600;margin-bottom:1.5rem">${esc(r['シリアル番号'])||'—'} / ${esc(r['ID(PC名)'])||'—'} — ${esc(r['ユーザー'])||'—'}</p>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal()">キャンセル</button>
       <button class="btn btn-danger" onclick="deleteRecord(${id})">削除する</button>
@@ -364,14 +470,50 @@ function confirmDelete(id) {
   document.getElementById('modal-overlay').classList.add('open');
 }
 
-async function deleteRecord(id) {
-  data = data.filter(x => x._id !== id); expanded.delete(id);
-  closeModal(); render();
-  await saveData();
+async function deleteRecord(id){
+  pcData=pcData.filter(x=>x._id!==id); expanded.delete(id);
+  closeModal(); render(); await savePC();
 }
 
-// 起動時に読み込み
-loadData();
+// ── マスタ管理 ──
+function renderMasterList(type){
+  const items=type==='dept'?depts:positions;
+  const listEl=document.getElementById(type+'-list');
+  if(!items.length){listEl.innerHTML='<p style="font-size:13px;color:#aaa;padding:8px">まだ登録されていません</p>';return;}
+  listEl.innerHTML=items.map((item,i)=>`
+    <div class="master-item" id="${type}-item-${i}">
+      <span>${esc(item)}</span>
+      <button class="btn btn-sm btn-danger" onclick="removeMasterItem('${type}',${i})">削除</button>
+    </div>`).join('');
+}
+
+function addMasterItem(type){
+  const input=document.getElementById(type+'-new');
+  const val=input.value.trim();
+  if(!val)return;
+  if(type==='dept')depts.push(val); else positions.push(val);
+  input.value='';
+  renderMasterList(type);
+}
+
+function removeMasterItem(type,idx){
+  if(type==='dept')depts.splice(idx,1); else positions.splice(idx,1);
+  renderMasterList(type);
+}
+
+async function saveMaster(type){
+  const action=type==='dept'?'saveDepts':'savePositions';
+  const data=type==='dept'?depts:positions;
+  showInd('saving','保存中...');
+  try{
+    const res=await gasPost(action,data);
+    if(res.error)throw new Error(res.error);
+    showInd('saved','マスタ保存済み ✓');
+  }catch(e){ showInd('error','保存エラー: '+e.message); }
+}
+
+// 起動
+loadAll();
 </script>
 </body>
 </html>

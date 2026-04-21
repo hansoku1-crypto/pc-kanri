@@ -74,31 +74,21 @@ tr:hover td{background:#fafafa}
 .form-section{font-size:11px;font-weight:600;color:#888;letter-spacing:.05em;grid-column:1/-1;margin-top:8px;padding-top:8px;border-top:0.5px solid #eee}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem;padding-top:1rem;border-top:0.5px solid #eee}
 
-/* 部署ツリー */
+/* 部署・役職マスタ共通 */
 .master-panel{background:#fff;border:0.5px solid #e0e0da;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
 .master-panel h3{font-size:14px;font-weight:600;margin-bottom:.75rem}
 .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem}
-.tree-hint{font-size:12px;color:#aaa;margin-bottom:.75rem}
-
-/* ドラッグ可能なツリーノード */
-.tree-container{border:0.5px solid #e0e0da;border-radius:8px;padding:8px;min-height:60px;margin-bottom:1rem;background:#fafafa}
-.tree-node{position:relative;user-select:none}
-.tree-row{display:flex;align-items:center;gap:6px;padding:6px 8px;background:#fff;border:0.5px solid #e8e8e4;border-radius:6px;margin-bottom:4px;cursor:grab;transition:box-shadow .15s,opacity .15s}
-.tree-row:hover{border-color:#bbb;box-shadow:0 1px 4px rgba(0,0,0,.08)}
-.tree-row.dragging{opacity:.4;cursor:grabbing}
-.tree-row.drag-over-top{border-top:2px solid #1a1a1a}
-.tree-row.drag-over-child{border:2px solid #4CAF50;background:#f0fff4}
-.tree-row.drag-over-bottom{border-bottom:2px solid #1a1a1a}
-.tree-children{margin-left:24px;padding-left:8px;border-left:2px solid #e8e8e4;margin-top:4px}
-.tree-drag-handle{color:#ccc;font-size:14px;cursor:grab;flex-shrink:0;padding:0 2px}
-.tree-drag-handle:hover{color:#888}
-.tree-toggle-btn{width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#aaa;font-size:11px;flex-shrink:0;border-radius:3px;border:none;background:transparent}
-.tree-toggle-btn:hover{background:#f0f0ea;color:#555}
-.tree-name-text{flex:1;font-size:13px}
-.tree-depth-badge{font-size:10px;color:#bbb;flex-shrink:0}
-.tree-actions{display:flex;gap:4px;flex-shrink:0}
-.drop-zone{height:4px;border-radius:2px;margin-bottom:4px;transition:height .1s,background .1s}
-.drop-zone.active{height:20px;background:#e8f5e9;border:1.5px dashed #4CAF50;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#4CAF50}
+/* 部署フラットリスト */
+.dept-list{border:0.5px solid #e0e0da;border-radius:8px;overflow:hidden;margin-bottom:1rem}
+.dept-row{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:10px;padding:8px 12px;border-bottom:0.5px solid #f0f0ea;background:#fff}
+.dept-row:last-child{border-bottom:none}
+.dept-row:hover{background:#fafafa}
+.dept-name-cell{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;min-width:0}
+.dept-level-line{flex-shrink:0;color:#ddd;font-size:12px}
+.dept-parent-sel{font-size:12px;border:0.5px solid #d0d0ca;border-radius:5px;padding:3px 8px;background:#fff;color:#555;outline:none;max-width:180px;cursor:pointer}
+.dept-parent-sel:focus{border-color:#888}
+.dept-level-badge{font-size:10px;padding:2px 7px;border-radius:8px;background:#f0f0ea;color:#888;white-space:nowrap}
+.dept-empty{padding:2rem;text-align:center;font-size:13px;color:#aaa}
 
 .add-form{background:#f8f8f6;border-radius:8px;padding:1rem;margin-top:.5rem}
 .add-form h4{font-size:12px;font-weight:600;color:#888;margin-bottom:.75rem}
@@ -189,12 +179,8 @@ tr:hover td{background:#fafafa}
         <h3>部署マスタ（3階層対応）</h3>
         <button class="btn btn-primary btn-sm" onclick="saveDeptMaster()">スプレッドシートに保存</button>
       </div>
-      <p class="tree-hint">☰ をドラッグして順序・階層を変更できます。別の部署の上にドロップすると子部署になります。</p>
-      <div class="tree-container" id="dept-tree"
-        ondragover="onTreeDragOver(event)"
-        ondrop="onTreeDrop(event)"
-        ondragleave="onTreeDragLeave(event)">
-      </div>
+      <p style="font-size:12px;color:#aaa;margin-bottom:.75rem">「親部署」欄を変更すると階層を移動できます。変更後は「スプレッドシートに保存」を押してください。</p>
+      <div id="dept-list" class="dept-list"></div>
       <div class="add-form">
         <h4>部署を追加</h4>
         <div class="add-row">
@@ -266,7 +252,7 @@ async function loadAll(){
     const allTasks=new Set([...DEFAULT_TASKS,...pcData.map(r=>r['管理者のタスク']).filter(Boolean)]);
     const allProc=new Set([...DEFAULT_PROCUREMENT,...pcData.map(r=>r['調達方法']).filter(Boolean)]);
     taskOptions=[...allTasks]; procOptions=[...allProc];
-    initFilters(); renderDeptTree(); renderPosList(); render();
+    initFilters(); renderDeptList(); renderPosList(); render();
     showInd('saved','読み込み完了');
   }catch(e){showInd('error','エラー: '+e.message);}
 }
@@ -281,7 +267,8 @@ async function savePC(){
   }catch(e){showInd('error','保存エラー: '+e.message);}
 }
 
-// ── 部署ツリーユーティリティ ──
+// ── 部署マスタ ──
+
 function buildTree(items){
   const map={}, roots=[];
   items.forEach(d=>{map[d.name]={...d,children:[]};});
@@ -301,7 +288,6 @@ function flatDeptOptions(tree,depth=0){
   return opts;
 }
 
-// ツリーをフラットな{name,parent}配列に戻す（順序保持）
 function treeToFlat(nodes,parent=''){
   const result=[];
   nodes.forEach(node=>{
@@ -311,218 +297,72 @@ function treeToFlat(nodes,parent=''){
   return result;
 }
 
-// 祖先かどうかチェック（循環防止）
-function isAncestor(tree,ancestorName,targetName){
-  function find(nodes,target){
-    for(const n of nodes){
-      if(n.name===target)return n;
-      const f=find(n.children,target);if(f)return f;
-    }return null;
+// 各部署の深さを返す
+function getDeptDepth(name){
+  let d=depts.find(x=>x.name===name);
+  let depth=0;
+  while(d&&d.parent){
+    depth++;
+    d=depts.find(x=>x.name===d.parent);
+    if(depth>10)break; // 循環防止
   }
-  function checkDesc(node,name){
-    if(!node)return false;
-    if(node.name===name)return true;
-    return node.children.some(c=>checkDesc(c,name));
-  }
-  const ancestor=find(tree,ancestorName);
-  return checkDesc(ancestor,targetName);
+  return depth;
 }
 
-// ── ドラッグ&ドロップ ──
-// ★ ハンドルのmousedownでdraggable属性をそのtree-nodeのみに付与。
-//   dragstart/endでクリーンアップ。これによりイベント伝播の問題を根本解決。
-
-function handleMouseDown(e, name) {
-  // ハンドル(☰)を押したときだけ、そのノードをドラッグ可能にする
-  const node = document.querySelector(`.tree-node[data-name="${CSS.escape(name)}"]`);
-  if (!node) return;
-  // 一旦全ノードのdraggableをfalseに
-  document.querySelectorAll('.tree-node').forEach(n => n.setAttribute('draggable','false'));
-  // 対象ノードだけtrueに
-  node.setAttribute('draggable','true');
-}
-
-function onDragStart(e, name) {
-  dragName = name;
-  e.dataTransfer.effectAllowed = 'move';
-  e.dataTransfer.setData('text/plain', name);
-  // ドラッグ中のスタイル
-  setTimeout(() => {
-    const row = document.querySelector(`.tree-node[data-name="${CSS.escape(name)}"] > .tree-row`);
-    if (row) row.classList.add('dragging');
-  }, 0);
-}
-
-function onDragEnd(e) {
-  // 全ノードのdraggableをリセット
-  document.querySelectorAll('.tree-node').forEach(n => n.setAttribute('draggable','false'));
-  dragName = null; dragOverName = null; dragOverMode = null;
-  clearDragStyles();
-}
-
-function clearDragStyles() {
-  document.querySelectorAll('.tree-row').forEach(el =>
-    el.classList.remove('dragging','drag-over-top','drag-over-child','drag-over-bottom')
-  );
-}
-
-function getDropMode(e, rowEl) {
-  const rect = rowEl.getBoundingClientRect();
-  const y = e.clientY - rect.top;
-  const h = rect.height;
-  if (y < h * 0.28) return 'top';
-  if (y > h * 0.72) return 'bottom';
-  return 'child';
-}
-
-function onRowDragOver(e, name) {
-  e.preventDefault();
-  e.stopPropagation(); // ★ 親ノードへの伝播を止める
-  if (!dragName || dragName === name) return;
-  // 循環チェック：nameがdragNameの子孫なら受け付けない
-  if (isAncestor(buildTree(depts), dragName, name)) {
-    e.dataTransfer.dropEffect = 'none';
-    return;
-  }
-  e.dataTransfer.dropEffect = 'move';
-  // .tree-rowは直下のもの（子ノードのrowではない）
-  const row = document.querySelector(`.tree-node[data-name="${CSS.escape(name)}"] > .tree-row`);
-  if (!row) return;
-  const mode = getDropMode(e, row);
-  if (dragOverName !== name || dragOverMode !== mode) {
-    clearDragStyles();
-    dragOverName = name; dragOverMode = mode;
-    if (mode === 'top')   row.classList.add('drag-over-top');
-    else if (mode === 'child') row.classList.add('drag-over-child');
-    else                  row.classList.add('drag-over-bottom');
-  }
-}
-
-function onRowDragLeave(e, name) {
-  e.stopPropagation();
-  // relatedTargetが自分の直下.tree-row内なら無視（内部移動）
-  const node = document.querySelector(`.tree-node[data-name="${CSS.escape(name)}"]`);
-  if (node && e.relatedTarget && node.contains(e.relatedTarget)) return;
-  if (dragOverName === name) {
-    clearDragStyles();
-    dragOverName = null; dragOverMode = null;
-  }
-}
-
-function onRowDrop(e, targetName) {
-  e.preventDefault();
-  e.stopPropagation(); // ★ 親ノードへの伝播を止める
-  if (!dragName || dragName === targetName) { clearDragStyles(); return; }
-  const tree = buildTree(depts);
-  if (isAncestor(tree, dragName, targetName)) { clearDragStyles(); return; }
-
-  const mode = dragOverMode || 'child';
-  // ★ dragNameのノード「1件だけ」を取り出す（子孫は移動しない）
-  const dragItem = depts.find(d => d.name === dragName);
-  if (!dragItem) { clearDragStyles(); return; }
-
-  const targetItem = depts.find(d => d.name === targetName);
-  const targetParent = targetItem ? targetItem.parent : '';
-
-  // dragNameをリストから除いた配列を作る（子孫はそのまま残る）
-  let newDepts = depts.filter(d => d.name !== dragName);
-
-  const targetIdx = newDepts.findIndex(d => d.name === targetName);
-
-  if (mode === 'child') {
-    // targetNameの直下の子として追加
-    dragItem.parent = targetName;
-    // targetNameの直後（子ノードの先頭）に挿入
-    newDepts.splice(targetIdx + 1, 0, dragItem);
-    treeOpen.add(targetName);
-  } else if (mode === 'top') {
-    // targetNameの直前・同じ階層
-    dragItem.parent = targetParent;
-    newDepts.splice(targetIdx, 0, dragItem);
-  } else {
-    // targetNameの直後・同じ階層
-    dragItem.parent = targetParent;
-    newDepts.splice(targetIdx + 1, 0, dragItem);
-  }
-
-  // ★ dragNameの子孫のparentを修正（移動後も正しい親を指すように）
-  // dragNameの旧parentを持つ子はそのまま（dragNameに繋がっているのでOK）
-
-  depts = newDepts;
-  clearDragStyles();
-  dragName = null; dragOverName = null; dragOverMode = null;
-  renderDeptTree(); initFilters();
-}
-
-function onTreeDragOver(e) {
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'move';
-}
-function onTreeDragLeave(e) {
-  if (!e.currentTarget.contains(e.relatedTarget)) clearDragStyles();
-}
-function onTreeDrop(e) {
-  e.preventDefault();
-  if (!dragName) return;
-  // ルートレベルへドロップ（tree-containerへのドロップ）
-  const dragItem = depts.find(d => d.name === dragName);
-  if (!dragItem) return;
-  dragItem.parent = '';
-  depts = [...depts.filter(d => d.name !== dragName), dragItem];
-  clearDragStyles();
-  dragName = null;
-  renderDeptTree(); initFilters();
-}
-
-// ── ツリー描画 ──
-function renderDeptTree(){
-  const tree=buildTree(depts);
-  const wrap=document.getElementById('dept-tree');
+function renderDeptList(){
+  const listEl=document.getElementById('dept-list');
+  if(!listEl)return;
   if(!depts.length){
-    wrap.innerHTML='<p style="padding:1rem;font-size:13px;color:#aaa;text-align:center">まだ登録されていません。下のフォームから追加してください。</p>';
+    listEl.innerHTML='<div class="dept-empty">まだ登録されていません。下のフォームから追加してください。</div>';
     updateDeptParentSelect(); return;
   }
-  wrap.innerHTML=renderTreeNodes(tree,0);
+  // ツリー順にソートして表示
+  const ordered=treeToFlat(buildTree(depts));
+  const allOpts=flatDeptOptions(buildTree(depts));
+
+  listEl.innerHTML=ordered.map(d=>{
+    const depth=getDeptDepth(d.name);
+    const levelColors=['','#9C27B0','#2196F3'];
+    const levelLabels=['L1 最上位','L2 中階層','L3 末端'];
+    const badge=`<span class="dept-level-badge" style="background:${depth===0?'#f0f0ea':depth===1?'#F3E5F5':'#E3F2FD'};color:${depth===0?'#888':depth===1?'#6A1B9A':'#1565C0'}">${levelLabels[Math.min(depth,2)]}</span>`;
+    const indent='　'.repeat(depth);
+    // 自分自身と子孫は親として選べない
+    const validParentOpts=allOpts.filter(o=>o.value!==d.name&&!isDescendant(d.name,o.value));
+    const selOpts='<option value="">なし（最上位）</option>'+validParentOpts.map(o=>`<option value="${esc(o.value)}"${d.parent===o.value?' selected':''}>${esc(o.label)}</option>`).join('');
+    return `<div class="dept-row">
+      <div class="dept-name-cell"><span style="color:#ddd;margin-right:2px">${'─'.repeat(depth)}</span><span>${esc(d.name)}</span></div>
+      ${badge}
+      <select class="dept-parent-sel" onchange="changeDeptParent('${esc(d.name)}',this.value)">${selOpts}</select>
+      <button class="btn btn-sm btn-danger" onclick="removeDept('${esc(d.name)}')">削除</button>
+    </div>`;
+  }).join('');
+
   updateDeptParentSelect();
 }
 
-function renderTreeNodes(nodes, depth) {
-  return nodes.map(node => {
-    const hasChildren = node.children && node.children.length > 0;
-    const nm = node.name;
-    return `<div class="tree-node" data-name="${esc(nm)}" draggable="false"
-        ondragstart="onDragStart(event,'${esc(nm)}')"
-        ondragend="onDragEnd(event)"
-        ondragover="onRowDragOver(event,'${esc(nm)}')"
-        ondragleave="onRowDragLeave(event,'${esc(nm)}')"
-        ondrop="onRowDrop(event,'${esc(nm)}')">
-      <div class="tree-row">
-        <span class="tree-drag-handle" onmousedown="handleMouseDown(event,'${esc(nm)}')" title="ドラッグして移動">☰</span>
-        ${hasChildren
-          ? `<button class="tree-toggle-btn" onclick="toggleTree('${esc(nm)}');event.stopPropagation()">${treeOpen.has(nm) ? '▾' : '▸'}</button>`
-          : `<span style="width:20px;flex-shrink:0"></span>`}
-        <span class="tree-name-text">${esc(nm)}</span>
-        ${depth > 0 ? `<span class="tree-depth-badge">L${depth}</span>` : ''}
-        <div class="tree-actions">
-          <button class="btn btn-sm btn-danger" onclick="removeDept('${esc(nm)}');event.stopPropagation()">削除</button>
-        </div>
-      </div>
-      ${hasChildren ? `<div class="tree-children">${renderTreeNodes(node.children, depth + 1)}</div>` : ''}
-    </div>`;
-  }).join('');
+// nameがtargetの子孫かチェック
+function isDescendant(ancestorName, targetName){
+  let cur=depts.find(d=>d.name===targetName);
+  let count=0;
+  while(cur&&cur.parent){
+    if(cur.parent===ancestorName)return true;
+    cur=depts.find(d=>d.name===cur.parent);
+    if(++count>20)break;
+  }
+  return false;
 }
 
-function toggleTree(name){
-  if(treeOpen.has(name))treeOpen.delete(name);else treeOpen.add(name);
-  renderDeptTree();
+function changeDeptParent(name, newParent){
+  const item=depts.find(d=>d.name===name);
+  if(item){ item.parent=newParent; renderDeptList(); initFilters(); }
 }
 
 function updateDeptParentSelect(){
   const sel=document.getElementById('dept-new-parent');
+  if(!sel)return;
   const cur=sel.value;
   while(sel.options.length>1)sel.remove(1);
-  const tree=buildTree(depts);
-  flatDeptOptions(tree).forEach(({value,label})=>{
+  flatDeptOptions(buildTree(depts)).forEach(({value,label})=>{
     const o=document.createElement('option');o.value=value;o.textContent=label;
     if(value===cur)o.selected=true;sel.appendChild(o);
   });
@@ -535,17 +375,21 @@ function addDept(){
   if(depts.find(d=>d.name===name)){alert('同じ名前の部署が既に存在します');return;}
   depts.push({name,parent});
   document.getElementById('dept-new-name').value='';
-  if(parent)treeOpen.add(parent);
-  renderDeptTree(); initFilters();
+  renderDeptList(); initFilters();
 }
 
 function removeDept(name){
-  const toRemove=new Set();
-  function collectChildren(n){toRemove.add(n);depts.filter(d=>d.parent===n).forEach(d=>collectChildren(d.name));}
-  collectChildren(name);
-  if(toRemove.size>1&&!confirm(`「${name}」とその子部署（${toRemove.size-1}件）をまとめて削除しますか？`))return;
-  depts=depts.filter(d=>!toRemove.has(d.name));
-  renderDeptTree(); initFilters();
+  const children=depts.filter(d=>d.parent===name);
+  if(children.length){
+    const toRemove=new Set();
+    function collect(n){toRemove.add(n);depts.filter(d=>d.parent===n).forEach(d=>collect(d.name));}
+    collect(name);
+    if(!confirm(`「${name}」とその子部署（${toRemove.size-1}件）をまとめて削除しますか？`))return;
+    depts=depts.filter(d=>!toRemove.has(d.name));
+  } else {
+    depts=depts.filter(d=>d.name!==name);
+  }
+  renderDeptList(); initFilters();
 }
 
 async function saveDeptMaster(){
@@ -554,7 +398,7 @@ async function saveDeptMaster(){
     const flat=treeToFlat(buildTree(depts));
     const res=await gasPost('saveDepts',flat);
     if(res.error)throw new Error(res.error);
-    depts=flat; // 順序をツリー順で更新
+    depts=flat;
     showInd('saved','部署マスタ保存済み ✓');
   }catch(e){showInd('error','保存エラー: '+e.message);}
 }

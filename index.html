@@ -109,6 +109,16 @@ tr:hover td{background:#fafafa}
 .dept-parent-sel:focus{border-color:#888}
 .dept-level-badge{font-size:10px;padding:2px 7px;border-radius:8px;background:#f0f0ea;color:#888;white-space:nowrap}
 .dept-empty{padding:2rem;text-align:center;font-size:13px;color:#aaa}
+.ctx-menu-wrap{position:relative;flex-shrink:0}
+.ctx-btn{font-size:16px;width:28px;height:28px;border:none;background:transparent;cursor:pointer;color:#aaa;border-radius:5px;display:flex;align-items:center;justify-content:center;line-height:1}
+.ctx-btn:hover{background:#f0f0ea;color:#555}
+.ctx-menu{display:none;position:absolute;right:0;top:30px;background:#fff;border:0.5px solid #e0e0da;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);min-width:150px;z-index:100;overflow:hidden}
+.ctx-menu.open{display:block}
+.ctx-menu-item{display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:13px;cursor:pointer;color:#1a1a1a;white-space:nowrap}
+.ctx-menu-item:hover{background:#f5f5f3}
+.ctx-menu-item.danger{color:#c0392b}
+.ctx-menu-item.danger:hover{background:#fdf0f0}
+.ctx-menu-sep{height:0.5px;background:#eee;margin:2px 0}
 
 .add-form{background:#f8f8f6;border-radius:8px;padding:1rem;margin-top:.5rem}
 .add-form h4{font-size:12px;font-weight:600;color:#888;margin-bottom:.75rem}
@@ -452,11 +462,23 @@ function renderDeptList(){
     // 自分自身と子孫は親として選べない
     const validParentOpts=allOpts.filter(o=>o.value!==d.name&&!isDescendant(d.name,o.value));
     const selOpts='<option value="">なし（最上位）</option>'+validParentOpts.map(o=>`<option value="${esc(o.value)}"${d.parent===o.value?' selected':''}>${esc(o.label)}</option>`).join('');
+    const menuId = 'ctx-' + d.name.replace(/[^a-zA-Z0-9]/g,'_') + '_' + Math.random().toString(36).slice(2,6);
     return `<div class="dept-row">
       <div class="dept-name-cell"><span style="color:#ddd;margin-right:2px">${'─'.repeat(depth)}</span><span>${esc(d.name)}</span></div>
       ${badge}
       <select class="dept-parent-sel" onchange="changeDeptParent('${esc(d.name)}',this.value)">${selOpts}</select>
-      <button class="btn btn-sm btn-danger" onclick="removeDept('${esc(d.name)}')">削除</button>
+      <div class="ctx-menu-wrap">
+        <button class="ctx-btn" onclick="toggleCtxMenu(event,'${esc(menuId)}')">⋯</button>
+        <div class="ctx-menu" id="${esc(menuId)}">
+          <div class="ctx-menu-item" onclick="renameDept('${esc(d.name)}');closeAllCtxMenus()">
+            <span>✏</span> 部署名を変更
+          </div>
+          <div class="ctx-menu-sep"></div>
+          <div class="ctx-menu-item danger" onclick="removeDept('${esc(d.name)}');closeAllCtxMenus()">
+            <span>🗑</span> 部署を削除
+          </div>
+        </div>
+      </div>
     </div>`;
   }).join('');
 
@@ -512,6 +534,36 @@ function removeDept(name){
   } else {
     depts=depts.filter(d=>d.name!==name);
   }
+  renderDeptList(); initFilters();
+}
+
+
+// ── コンテキストメニュー ──
+function toggleCtxMenu(e, menuId) {
+  e.stopPropagation();
+  const menu = document.getElementById(menuId);
+  if (!menu) return;
+  const isOpen = menu.classList.contains('open');
+  closeAllCtxMenus();
+  if (!isOpen) menu.classList.add('open');
+}
+function closeAllCtxMenus() {
+  document.querySelectorAll('.ctx-menu.open').forEach(m => m.classList.remove('open'));
+}
+// ページ外クリックで閉じる
+document.addEventListener('click', closeAllCtxMenus);
+
+function renameDept(oldName) {
+  const newName = prompt(`部署名を変更します\n現在: ${oldName}\n\n新しい部署名を入力してください`, oldName);
+  if (!newName || newName.trim() === '') return;
+  const trimmed = newName.trim();
+  if (trimmed === oldName) return;
+  if (depts.find(d => d.name === trimmed)) { alert('同じ名前の部署が既に存在します'); return; }
+  // depts内の該当レコードの名前を変更
+  depts.forEach(d => {
+    if (d.name === oldName) d.name = trimmed;
+    if (d.parent === oldName) d.parent = trimmed;
+  });
   renderDeptList(); initFilters();
 }
 

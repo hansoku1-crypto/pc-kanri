@@ -192,7 +192,7 @@ tr:hover td{background:#fafafa}
       <p class="tree-hint">☰ をドラッグして順序・階層を変更できます。別の部署の上にドロップすると子部署になります。</p>
       <div class="tree-container" id="dept-tree"
         ondragover="onTreeDragOver(event)"
-        ondrop="onTreeDrop(event,'',null)"
+        ondrop="onTreeDrop(event)"
         ondragleave="onTreeDragLeave(event)">
       </div>
       <div class="add-form">
@@ -236,7 +236,9 @@ let taskOptions=[...DEFAULT_TASKS], procOptions=[...DEFAULT_PROCUREMENT];
 let sortKey='利用開始日', sortDir=-1, expanded=new Set(), treeOpen=new Set();
 
 // ── ドラッグ状態 ──
-let dragName=null, dragOverName=null, dragOverMode=null; // mode: 'top'|'child'|'bottom'
+let dragName=null, dragOverName=null, dragOverMode=null;
+// mode: 'top'|'child'|'bottom'
+// ★ ドラッグはハンドル(☰)のみから開始。tree-nodeのdraggableは使わない。
 
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function normDate(s){if(!s)return'';const d=s.trim();if(/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(d)){const p=d.split('/');return`${p[0]}-${p[1].padStart(2,'0')}-${p[2].padStart(2,'0')}`;}if(/^\d{8}$/.test(d))return`${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`;return d;}
@@ -327,112 +329,148 @@ function isAncestor(tree,ancestorName,targetName){
 }
 
 // ── ドラッグ&ドロップ ──
-function onDragStart(e,name){
-  dragName=name;
-  e.dataTransfer.effectAllowed='move';
-  e.dataTransfer.setData('text/plain',name);
-  setTimeout(()=>{
-    const el=document.querySelector(`[data-name="${CSS.escape(name)}"] .tree-row`);
-    if(el)el.classList.add('dragging');
-  },0);
+// ★ ハンドルのmousedownでdraggable属性をそのtree-nodeのみに付与。
+//   dragstart/endでクリーンアップ。これによりイベント伝播の問題を根本解決。
+
+function handleMouseDown(e, name) {
+  // ハンドル(☰)を押したときだけ、そのノードをドラッグ可能にする
+  const node = document.querySelector(`.tree-node[data-name="${CSS.escape(name)}"]`);
+  if (!node) return;
+  // 一旦全ノードのdraggableをfalseに
+  document.querySelectorAll('.tree-node').forEach(n => n.setAttribute('draggable','false'));
+  // 対象ノードだけtrueに
+  node.setAttribute('draggable','true');
 }
 
-function onDragEnd(){
-  dragName=null; dragOverName=null; dragOverMode=null;
-  document.querySelectorAll('.tree-row').forEach(el=>{
-    el.classList.remove('dragging','drag-over-top','drag-over-child','drag-over-bottom');
-  });
+function onDragStart(e, name) {
+  dragName = name;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', name);
+  // ドラッグ中のスタイル
+  setTimeout(() => {
+    const row = document.querySelector(`.tree-node[data-name="${CSS.escape(name)}"] > .tree-row`);
+    if (row) row.classList.add('dragging');
+  }, 0);
 }
 
-function getDropMode(e,el){
-  const rect=el.getBoundingClientRect();
-  const y=e.clientY-rect.top;
-  const h=rect.height;
-  if(y<h*0.25)return'top';
-  if(y>h*0.75)return'bottom';
-  return'child';
+function onDragEnd(e) {
+  // 全ノードのdraggableをリセット
+  document.querySelectorAll('.tree-node').forEach(n => n.setAttribute('draggable','false'));
+  dragName = null; dragOverName = null; dragOverMode = null;
+  clearDragStyles();
 }
 
-function onRowDragOver(e,name){
-  e.preventDefault();e.stopPropagation();
-  if(dragName===name)return;
-  const row=document.querySelector(`[data-name="${CSS.escape(name)}"] > .tree-row`);
-  if(!row)return;
-  const mode=getDropMode(e,row);
-  if(dragOverName!==name||dragOverMode!==mode){
+function clearDragStyles() {
+  document.querySelectorAll('.tree-row').forEach(el =>
+    el.classList.remove('dragging','drag-over-top','drag-over-child','drag-over-bottom')
+  );
+}
+
+function getDropMode(e, rowEl) {
+  const rect = rowEl.getBoundingClientRect();
+  const y = e.clientY - rect.top;
+  const h = rect.height;
+  if (y < h * 0.28) return 'top';
+  if (y > h * 0.72) return 'bottom';
+  return 'child';
+}
+
+function onRowDragOver(e, name) {
+  e.preventDefault();
+  e.stopPropagation(); // ★ 親ノードへの伝播を止める
+  if (!dragName || dragName === name) return;
+  // 循環チェック：nameがdragNameの子孫なら受け付けない
+  if (isAncestor(buildTree(depts), dragName, name)) {
+    e.dataTransfer.dropEffect = 'none';
+    return;
+  }
+  e.dataTransfer.dropEffect = 'move';
+  // .tree-rowは直下のもの（子ノードのrowではない）
+  const row = document.querySelector(`.tree-node[data-name="${CSS.escape(name)}"] > .tree-row`);
+  if (!row) return;
+  const mode = getDropMode(e, row);
+  if (dragOverName !== name || dragOverMode !== mode) {
     clearDragStyles();
-    dragOverName=name; dragOverMode=mode;
-    if(mode==='top')row.classList.add('drag-over-top');
-    else if(mode==='child')row.classList.add('drag-over-child');
-    else row.classList.add('drag-over-bottom');
+    dragOverName = name; dragOverMode = mode;
+    if (mode === 'top')   row.classList.add('drag-over-top');
+    else if (mode === 'child') row.classList.add('drag-over-child');
+    else                  row.classList.add('drag-over-bottom');
   }
-  e.dataTransfer.dropEffect='move';
 }
 
-function onRowDragLeave(e,name){
-  // 子要素への移動は無視
-  if(e.relatedTarget&&e.currentTarget.contains(e.relatedTarget))return;
-  clearDragStyles();
-  dragOverName=null; dragOverMode=null;
+function onRowDragLeave(e, name) {
+  e.stopPropagation();
+  // relatedTargetが自分の直下.tree-row内なら無視（内部移動）
+  const node = document.querySelector(`.tree-node[data-name="${CSS.escape(name)}"]`);
+  if (node && e.relatedTarget && node.contains(e.relatedTarget)) return;
+  if (dragOverName === name) {
+    clearDragStyles();
+    dragOverName = null; dragOverMode = null;
+  }
 }
 
-function onTreeDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';}
-function onTreeDragLeave(e){if(!e.currentTarget.contains(e.relatedTarget))clearDragStyles();}
+function onRowDrop(e, targetName) {
+  e.preventDefault();
+  e.stopPropagation(); // ★ 親ノードへの伝播を止める
+  if (!dragName || dragName === targetName) { clearDragStyles(); return; }
+  const tree = buildTree(depts);
+  if (isAncestor(tree, dragName, targetName)) { clearDragStyles(); return; }
 
-function clearDragStyles(){
-  document.querySelectorAll('.tree-row').forEach(el=>{
-    el.classList.remove('drag-over-top','drag-over-child','drag-over-bottom');
-  });
-}
+  const mode = dragOverMode || 'child';
+  // ★ dragNameのノード「1件だけ」を取り出す（子孫は移動しない）
+  const dragItem = depts.find(d => d.name === dragName);
+  if (!dragItem) { clearDragStyles(); return; }
 
-function onRowDrop(e,targetName){
-  e.preventDefault();e.stopPropagation();
-  if(!dragName||dragName===targetName)return;
-  const tree=buildTree(depts);
-  // 循環チェック：targetNameがdragNameの子孫なら不可
-  if(isAncestor(tree,dragName,targetName)){clearDragStyles();return;}
-  const mode=dragOverMode||'child';
-  // depsからdragNameのノードを取り出す
-  const dragItem=depts.find(d=>d.name===dragName);
-  if(!dragItem){clearDragStyles();return;}
-  // targetNameの親を取得
-  const targetItem=depts.find(d=>d.name===targetName);
-  const targetParent=targetItem?targetItem.parent:'';
-  // depsから一時削除
-  let newDepts=depts.filter(d=>d.name!==dragName);
-  // モードに応じて挿入
-  const targetIdx=newDepts.findIndex(d=>d.name===targetName);
-  if(mode==='child'){
-    // targetNameの子として追加
-    dragItem.parent=targetName;
-    newDepts.splice(targetIdx+1,0,dragItem);
+  const targetItem = depts.find(d => d.name === targetName);
+  const targetParent = targetItem ? targetItem.parent : '';
+
+  // dragNameをリストから除いた配列を作る（子孫はそのまま残る）
+  let newDepts = depts.filter(d => d.name !== dragName);
+
+  const targetIdx = newDepts.findIndex(d => d.name === targetName);
+
+  if (mode === 'child') {
+    // targetNameの直下の子として追加
+    dragItem.parent = targetName;
+    // targetNameの直後（子ノードの先頭）に挿入
+    newDepts.splice(targetIdx + 1, 0, dragItem);
     treeOpen.add(targetName);
-  }else if(mode==='top'){
-    // targetNameの直前・同階層
-    dragItem.parent=targetParent;
-    newDepts.splice(targetIdx,0,dragItem);
-  }else{
-    // targetNameの直後・同階層
-    dragItem.parent=targetParent;
-    newDepts.splice(targetIdx+1,0,dragItem);
+  } else if (mode === 'top') {
+    // targetNameの直前・同じ階層
+    dragItem.parent = targetParent;
+    newDepts.splice(targetIdx, 0, dragItem);
+  } else {
+    // targetNameの直後・同じ階層
+    dragItem.parent = targetParent;
+    newDepts.splice(targetIdx + 1, 0, dragItem);
   }
-  depts=newDepts;
+
+  // ★ dragNameの子孫のparentを修正（移動後も正しい親を指すように）
+  // dragNameの旧parentを持つ子はそのまま（dragNameに繋がっているのでOK）
+
+  depts = newDepts;
   clearDragStyles();
-  dragName=null; dragOverName=null; dragOverMode=null;
+  dragName = null; dragOverName = null; dragOverMode = null;
   renderDeptTree(); initFilters();
 }
 
-function onTreeDrop(e,targetName,mode){
+function onTreeDragOver(e) {
   e.preventDefault();
-  if(!dragName)return;
-  // ルートレベルへドロップ
-  const dragItem=depts.find(d=>d.name===dragName);
-  if(!dragItem)return;
-  dragItem.parent='';
-  depts=depts.filter(d=>d.name!==dragName);
-  depts.push(dragItem);
+  e.dataTransfer.dropEffect = 'move';
+}
+function onTreeDragLeave(e) {
+  if (!e.currentTarget.contains(e.relatedTarget)) clearDragStyles();
+}
+function onTreeDrop(e) {
+  e.preventDefault();
+  if (!dragName) return;
+  // ルートレベルへドロップ（tree-containerへのドロップ）
+  const dragItem = depts.find(d => d.name === dragName);
+  if (!dragItem) return;
+  dragItem.parent = '';
+  depts = [...depts.filter(d => d.name !== dragName), dragItem];
   clearDragStyles();
-  dragName=null;
+  dragName = null;
   renderDeptTree(); initFilters();
 }
 
@@ -448,28 +486,28 @@ function renderDeptTree(){
   updateDeptParentSelect();
 }
 
-function renderTreeNodes(nodes,depth){
-  return nodes.map(node=>{
-    const hasChildren=node.children&&node.children.length>0;
-    const isOpen=treeOpen.has(node.name)||hasChildren; // 子があれば基本開く
-    const depthLabel=depth===0?'':'depth-'+depth;
-    return`<div class="tree-node" data-name="${esc(node.name)}"
-        draggable="true"
-        ondragstart="onDragStart(event,'${esc(node.name)}')"
-        ondragend="onDragEnd()"
-        ondragover="onRowDragOver(event,'${esc(node.name)}')"
-        ondragleave="onRowDragLeave(event,'${esc(node.name)}')"
-        ondrop="onRowDrop(event,'${esc(node.name)}')">
+function renderTreeNodes(nodes, depth) {
+  return nodes.map(node => {
+    const hasChildren = node.children && node.children.length > 0;
+    const nm = node.name;
+    return `<div class="tree-node" data-name="${esc(nm)}" draggable="false"
+        ondragstart="onDragStart(event,'${esc(nm)}')"
+        ondragend="onDragEnd(event)"
+        ondragover="onRowDragOver(event,'${esc(nm)}')"
+        ondragleave="onRowDragLeave(event,'${esc(nm)}')"
+        ondrop="onRowDrop(event,'${esc(nm)}')">
       <div class="tree-row">
-        <span class="tree-drag-handle">☰</span>
-        ${hasChildren?`<button class="tree-toggle-btn" onclick="toggleTree('${esc(node.name)}');event.stopPropagation()">${treeOpen.has(node.name)||true?'▾':'▸'}</button>`:`<span style="width:20px;flex-shrink:0"></span>`}
-        <span class="tree-name-text">${esc(node.name)}</span>
-        ${depth>0?`<span class="tree-depth-badge">L${depth}</span>`:''}
+        <span class="tree-drag-handle" onmousedown="handleMouseDown(event,'${esc(nm)}')" title="ドラッグして移動">☰</span>
+        ${hasChildren
+          ? `<button class="tree-toggle-btn" onclick="toggleTree('${esc(nm)}');event.stopPropagation()">${treeOpen.has(nm) ? '▾' : '▸'}</button>`
+          : `<span style="width:20px;flex-shrink:0"></span>`}
+        <span class="tree-name-text">${esc(nm)}</span>
+        ${depth > 0 ? `<span class="tree-depth-badge">L${depth}</span>` : ''}
         <div class="tree-actions">
-          <button class="btn btn-sm btn-danger" onclick="removeDept('${esc(node.name)}');event.stopPropagation()">削除</button>
+          <button class="btn btn-sm btn-danger" onclick="removeDept('${esc(nm)}');event.stopPropagation()">削除</button>
         </div>
       </div>
-      ${hasChildren?`<div class="tree-children">${renderTreeNodes(node.children,depth+1)}</div>`:''}
+      ${hasChildren ? `<div class="tree-children">${renderTreeNodes(node.children, depth + 1)}</div>` : ''}
     </div>`;
   }).join('');
 }

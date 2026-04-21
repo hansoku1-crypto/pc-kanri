@@ -60,8 +60,6 @@ tr:hover td{background:#fafafa}
 .btn-danger{color:#c0392b;border-color:#e0a0a0}
 .btn-danger:hover{background:#fdf0f0}
 .btn-sm{font-size:11px;padding:3px 9px}
-.btn-icon{font-size:14px;padding:2px 6px;border:none;background:transparent;cursor:pointer;color:#888;line-height:1}
-.btn-icon:hover{color:#1a1a1a}
 
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;align-items:flex-start;justify-content:center;padding-top:40px;overflow-y:auto}
 .modal-overlay.open{display:flex}
@@ -80,19 +78,27 @@ tr:hover td{background:#fafafa}
 .master-panel{background:#fff;border:0.5px solid #e0e0da;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
 .master-panel h3{font-size:14px;font-weight:600;margin-bottom:.75rem}
 .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem}
-.tree-wrap{border:0.5px solid #e0e0da;border-radius:8px;overflow:hidden;margin-bottom:1rem}
-.tree-node{border-bottom:0.5px solid #f0f0ea}
-.tree-node:last-child{border-bottom:none}
-.tree-row{display:flex;align-items:center;gap:6px;padding:7px 10px;background:#fff}
-.tree-row:hover{background:#fafafa}
-.tree-indent{flex-shrink:0}
-.tree-toggle{width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#aaa;font-size:11px;flex-shrink:0;border-radius:3px}
-.tree-toggle:hover{background:#f0f0ea;color:#555}
-.tree-toggle.leaf{cursor:default;color:transparent}
-.tree-name{flex:1;font-size:13px}
-.tree-parent{font-size:11px;color:#aaa;margin-left:4px}
-.tree-actions{display:flex;gap:4px;opacity:0}
-.tree-row:hover .tree-actions{opacity:1}
+.tree-hint{font-size:12px;color:#aaa;margin-bottom:.75rem}
+
+/* ドラッグ可能なツリーノード */
+.tree-container{border:0.5px solid #e0e0da;border-radius:8px;padding:8px;min-height:60px;margin-bottom:1rem;background:#fafafa}
+.tree-node{position:relative;user-select:none}
+.tree-row{display:flex;align-items:center;gap:6px;padding:6px 8px;background:#fff;border:0.5px solid #e8e8e4;border-radius:6px;margin-bottom:4px;cursor:grab;transition:box-shadow .15s,opacity .15s}
+.tree-row:hover{border-color:#bbb;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.tree-row.dragging{opacity:.4;cursor:grabbing}
+.tree-row.drag-over-top{border-top:2px solid #1a1a1a}
+.tree-row.drag-over-child{border:2px solid #4CAF50;background:#f0fff4}
+.tree-row.drag-over-bottom{border-bottom:2px solid #1a1a1a}
+.tree-children{margin-left:24px;padding-left:8px;border-left:2px solid #e8e8e4;margin-top:4px}
+.tree-drag-handle{color:#ccc;font-size:14px;cursor:grab;flex-shrink:0;padding:0 2px}
+.tree-drag-handle:hover{color:#888}
+.tree-toggle-btn{width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#aaa;font-size:11px;flex-shrink:0;border-radius:3px;border:none;background:transparent}
+.tree-toggle-btn:hover{background:#f0f0ea;color:#555}
+.tree-name-text{flex:1;font-size:13px}
+.tree-depth-badge{font-size:10px;color:#bbb;flex-shrink:0}
+.tree-actions{display:flex;gap:4px;flex-shrink:0}
+.drop-zone{height:4px;border-radius:2px;margin-bottom:4px;transition:height .1s,background .1s}
+.drop-zone.active{height:20px;background:#e8f5e9;border:1.5px dashed #4CAF50;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#4CAF50}
 
 .add-form{background:#f8f8f6;border-radius:8px;padding:1rem;margin-top:.5rem}
 .add-form h4{font-size:12px;font-weight:600;color:#888;margin-bottom:.75rem}
@@ -101,7 +107,6 @@ tr:hover td{background:#fafafa}
 .add-field label{font-size:11px;color:#888}
 .add-field input,.add-field select{font-size:13px;border:0.5px solid #d0d0ca;border-radius:6px;padding:5px 8px;outline:none;background:#fff;color:#1a1a1a;width:100%}
 
-/* 役職マスタ */
 .master-list{display:flex;flex-direction:column;gap:4px;margin-bottom:.75rem;max-height:300px;overflow-y:auto}
 .master-item{display:flex;align-items:center;gap:8px;padding:6px 8px;background:#fafafa;border-radius:6px;border:0.5px solid #eee}
 .master-item span{flex:1;font-size:13px}
@@ -184,7 +189,12 @@ tr:hover td{background:#fafafa}
         <h3>部署マスタ（3階層対応）</h3>
         <button class="btn btn-primary btn-sm" onclick="saveDeptMaster()">スプレッドシートに保存</button>
       </div>
-      <div class="tree-wrap" id="dept-tree"></div>
+      <p class="tree-hint">☰ をドラッグして順序・階層を変更できます。別の部署の上にドロップすると子部署になります。</p>
+      <div class="tree-container" id="dept-tree"
+        ondragover="onTreeDragOver(event)"
+        ondrop="onTreeDrop(event,'',null)"
+        ondragleave="onTreeDragLeave(event)">
+      </div>
       <div class="add-form">
         <h4>部署を追加</h4>
         <div class="add-row">
@@ -199,10 +209,7 @@ tr:hover td{background:#fafafa}
   <!-- 役職マスタ -->
   <div id="tab-pos" style="display:none">
     <div class="master-panel">
-      <div class="section-header">
-        <h3>役職マスタ</h3>
-        <button class="btn btn-primary btn-sm" onclick="savePosMaster()">スプレッドシートに保存</button>
-      </div>
+      <div class="section-header"><h3>役職マスタ</h3><button class="btn btn-primary btn-sm" onclick="savePosMaster()">スプレッドシートに保存</button></div>
       <div class="master-list" id="pos-list"></div>
       <div class="master-add">
         <input type="text" id="pos-new" placeholder="新しい役職名を入力...">
@@ -212,24 +219,24 @@ tr:hover td{background:#fafafa}
   </div>
 </div>
 
-<!-- モーダル -->
 <div class="modal-overlay" id="modal-overlay" onclick="onOverlayClick(event)">
   <div class="modal" id="modal-content"></div>
 </div>
 
 <script>
-const GAS_URL = 'https://script.google.com/macros/s/AKfycby11ubaJ5zmNlNvP_iXxQofudIlkbtaugltwSdgfqBq3sEkcs5eWUf6ukFo8V6eHUqU/exec';
-
-const DEFAULT_TASKS       = ['貸出','返却','なし'];
-const DEFAULT_PROCUREMENT = ['購入','リース契約','レンタル'];
-const STATUS_LIST         = ['利用中','利用予定','在庫','準備中','廃棄・解約','所在不明'];
-const STATUS_CLASS = {'利用中':'s-active','利用予定':'s-scheduled','在庫':'s-stock','準備中':'s-prep','廃棄・解約':'s-disposed','所在不明':'s-unknown'};
-const STATUS_COLOR = {'利用中':'#4CAF50','利用予定':'#2196F3','在庫':'#9C27B0','準備中':'#FF9800','廃棄・解約':'#795548','所在不明':'#F44336'};
+const GAS_URL='https://script.google.com/macros/s/AKfycby11ubaJ5zmNlNvP_iXxQofudIlkbtaugltwSdgfqBq3sEkcs5eWUf6ukFo8V6eHUqU/exec';
+const DEFAULT_TASKS=['貸出','返却','なし'];
+const DEFAULT_PROCUREMENT=['購入','リース契約','レンタル'];
+const STATUS_LIST=['利用中','利用予定','在庫','準備中','廃棄・解約','所在不明'];
+const STATUS_CLASS={'利用中':'s-active','利用予定':'s-scheduled','在庫':'s-stock','準備中':'s-prep','廃棄・解約':'s-disposed','所在不明':'s-unknown'};
+const STATUS_COLOR={'利用中':'#4CAF50','利用予定':'#2196F3','在庫':'#9C27B0','準備中':'#FF9800','廃棄・解約':'#795548','所在不明':'#F44336'};
 
 let pcData=[], depts=[], positions=[];
 let taskOptions=[...DEFAULT_TASKS], procOptions=[...DEFAULT_PROCUREMENT];
-let sortKey='利用開始日', sortDir=-1, expanded=new Set();
-let treeOpen=new Set(); // 開いているノード
+let sortKey='利用開始日', sortDir=-1, expanded=new Set(), treeOpen=new Set();
+
+// ── ドラッグ状態 ──
+let dragName=null, dragOverName=null, dragOverMode=null; // mode: 'top'|'child'|'bottom'
 
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function normDate(s){if(!s)return'';const d=s.trim();if(/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(d)){const p=d.split('/');return`${p[0]}-${p[1].padStart(2,'0')}-${p[2].padStart(2,'0')}`;}if(/^\d{8}$/.test(d))return`${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`;return d;}
@@ -237,13 +244,11 @@ function normMaker(s){if(!s)return'';const t=s.trim().toUpperCase();if(t.startsW
 function showInd(state,msg){const el=document.getElementById('save-ind');el.className='save-ind '+state;el.textContent=msg||'';if(state==='saved')setTimeout(()=>{el.textContent='';el.className='save-ind';},3000);}
 function v(id){const el=document.getElementById(id);return el?el.value:'';}
 
-// ── タブ ──
 function showTab(name){
   ['list','dept','pos'].forEach(t=>{document.getElementById('tab-'+t).style.display=t===name?'':'none';});
   document.querySelectorAll('.tab').forEach((el,i)=>{el.classList.toggle('active',['list','dept','pos'][i]===name);});
 }
 
-// ── API ──
 async function gasGet(action){const res=await fetch(GAS_URL+'?action='+action);return res.json();}
 async function gasPost(action,data){const res=await fetch(GAS_URL+'?action='+action+'&data='+encodeURIComponent(JSON.stringify(data)));return res.json();}
 
@@ -274,32 +279,247 @@ async function savePC(){
   }catch(e){showInd('error','保存エラー: '+e.message);}
 }
 
-// ── 部署ツリーのユーティリティ ──
-
-// ツリー構造を構築: [{name,parent}] → ネストされた配列
+// ── 部署ツリーユーティリティ ──
 function buildTree(items){
-  const roots=[], map={};
+  const map={}, roots=[];
   items.forEach(d=>{map[d.name]={...d,children:[]};});
   items.forEach(d=>{
-    if(d.parent&&map[d.parent]){map[d.parent].children.push(map[d.name]);}
-    else{roots.push(map[d.name]);}
+    if(d.parent&&map[d.parent])map[d.parent].children.push(map[d.name]);
+    else roots.push(map[d.name]);
   });
   return roots;
 }
 
-// フラットなパス付き選択肢を生成: [{value, label}]
-function flatDeptOptions(tree, prefix='', depth=0){
+function flatDeptOptions(tree,depth=0){
   const opts=[];
   tree.forEach(node=>{
-    const indent='　'.repeat(depth);
-    opts.push({value:node.name, label:indent+node.name});
-    if(node.children.length>0) opts.push(...flatDeptOptions(node.children,'',depth+1));
+    opts.push({value:node.name,label:'　'.repeat(depth)+node.name});
+    if(node.children.length)opts.push(...flatDeptOptions(node.children,depth+1));
   });
   return opts;
 }
 
-// 全部署名をフラットに取得
-function allDeptNames(){return depts.map(d=>d.name);}
+// ツリーをフラットな{name,parent}配列に戻す（順序保持）
+function treeToFlat(nodes,parent=''){
+  const result=[];
+  nodes.forEach(node=>{
+    result.push({name:node.name,parent});
+    if(node.children.length)result.push(...treeToFlat(node.children,node.name));
+  });
+  return result;
+}
+
+// 祖先かどうかチェック（循環防止）
+function isAncestor(tree,ancestorName,targetName){
+  function find(nodes,target){
+    for(const n of nodes){
+      if(n.name===target)return n;
+      const f=find(n.children,target);if(f)return f;
+    }return null;
+  }
+  function checkDesc(node,name){
+    if(!node)return false;
+    if(node.name===name)return true;
+    return node.children.some(c=>checkDesc(c,name));
+  }
+  const ancestor=find(tree,ancestorName);
+  return checkDesc(ancestor,targetName);
+}
+
+// ── ドラッグ&ドロップ ──
+function onDragStart(e,name){
+  dragName=name;
+  e.dataTransfer.effectAllowed='move';
+  e.dataTransfer.setData('text/plain',name);
+  setTimeout(()=>{
+    const el=document.querySelector(`[data-name="${CSS.escape(name)}"] .tree-row`);
+    if(el)el.classList.add('dragging');
+  },0);
+}
+
+function onDragEnd(){
+  dragName=null; dragOverName=null; dragOverMode=null;
+  document.querySelectorAll('.tree-row').forEach(el=>{
+    el.classList.remove('dragging','drag-over-top','drag-over-child','drag-over-bottom');
+  });
+}
+
+function getDropMode(e,el){
+  const rect=el.getBoundingClientRect();
+  const y=e.clientY-rect.top;
+  const h=rect.height;
+  if(y<h*0.25)return'top';
+  if(y>h*0.75)return'bottom';
+  return'child';
+}
+
+function onRowDragOver(e,name){
+  e.preventDefault();e.stopPropagation();
+  if(dragName===name)return;
+  const row=document.querySelector(`[data-name="${CSS.escape(name)}"] > .tree-row`);
+  if(!row)return;
+  const mode=getDropMode(e,row);
+  if(dragOverName!==name||dragOverMode!==mode){
+    clearDragStyles();
+    dragOverName=name; dragOverMode=mode;
+    if(mode==='top')row.classList.add('drag-over-top');
+    else if(mode==='child')row.classList.add('drag-over-child');
+    else row.classList.add('drag-over-bottom');
+  }
+  e.dataTransfer.dropEffect='move';
+}
+
+function onRowDragLeave(e,name){
+  // 子要素への移動は無視
+  if(e.relatedTarget&&e.currentTarget.contains(e.relatedTarget))return;
+  clearDragStyles();
+  dragOverName=null; dragOverMode=null;
+}
+
+function onTreeDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';}
+function onTreeDragLeave(e){if(!e.currentTarget.contains(e.relatedTarget))clearDragStyles();}
+
+function clearDragStyles(){
+  document.querySelectorAll('.tree-row').forEach(el=>{
+    el.classList.remove('drag-over-top','drag-over-child','drag-over-bottom');
+  });
+}
+
+function onRowDrop(e,targetName){
+  e.preventDefault();e.stopPropagation();
+  if(!dragName||dragName===targetName)return;
+  const tree=buildTree(depts);
+  // 循環チェック：targetNameがdragNameの子孫なら不可
+  if(isAncestor(tree,dragName,targetName)){clearDragStyles();return;}
+  const mode=dragOverMode||'child';
+  // depsからdragNameのノードを取り出す
+  const dragItem=depts.find(d=>d.name===dragName);
+  if(!dragItem){clearDragStyles();return;}
+  // targetNameの親を取得
+  const targetItem=depts.find(d=>d.name===targetName);
+  const targetParent=targetItem?targetItem.parent:'';
+  // depsから一時削除
+  let newDepts=depts.filter(d=>d.name!==dragName);
+  // モードに応じて挿入
+  const targetIdx=newDepts.findIndex(d=>d.name===targetName);
+  if(mode==='child'){
+    // targetNameの子として追加
+    dragItem.parent=targetName;
+    newDepts.splice(targetIdx+1,0,dragItem);
+    treeOpen.add(targetName);
+  }else if(mode==='top'){
+    // targetNameの直前・同階層
+    dragItem.parent=targetParent;
+    newDepts.splice(targetIdx,0,dragItem);
+  }else{
+    // targetNameの直後・同階層
+    dragItem.parent=targetParent;
+    newDepts.splice(targetIdx+1,0,dragItem);
+  }
+  depts=newDepts;
+  clearDragStyles();
+  dragName=null; dragOverName=null; dragOverMode=null;
+  renderDeptTree(); initFilters();
+}
+
+function onTreeDrop(e,targetName,mode){
+  e.preventDefault();
+  if(!dragName)return;
+  // ルートレベルへドロップ
+  const dragItem=depts.find(d=>d.name===dragName);
+  if(!dragItem)return;
+  dragItem.parent='';
+  depts=depts.filter(d=>d.name!==dragName);
+  depts.push(dragItem);
+  clearDragStyles();
+  dragName=null;
+  renderDeptTree(); initFilters();
+}
+
+// ── ツリー描画 ──
+function renderDeptTree(){
+  const tree=buildTree(depts);
+  const wrap=document.getElementById('dept-tree');
+  if(!depts.length){
+    wrap.innerHTML='<p style="padding:1rem;font-size:13px;color:#aaa;text-align:center">まだ登録されていません。下のフォームから追加してください。</p>';
+    updateDeptParentSelect(); return;
+  }
+  wrap.innerHTML=renderTreeNodes(tree,0);
+  updateDeptParentSelect();
+}
+
+function renderTreeNodes(nodes,depth){
+  return nodes.map(node=>{
+    const hasChildren=node.children&&node.children.length>0;
+    const isOpen=treeOpen.has(node.name)||hasChildren; // 子があれば基本開く
+    const depthLabel=depth===0?'':'depth-'+depth;
+    return`<div class="tree-node" data-name="${esc(node.name)}"
+        draggable="true"
+        ondragstart="onDragStart(event,'${esc(node.name)}')"
+        ondragend="onDragEnd()"
+        ondragover="onRowDragOver(event,'${esc(node.name)}')"
+        ondragleave="onRowDragLeave(event,'${esc(node.name)}')"
+        ondrop="onRowDrop(event,'${esc(node.name)}')">
+      <div class="tree-row">
+        <span class="tree-drag-handle">☰</span>
+        ${hasChildren?`<button class="tree-toggle-btn" onclick="toggleTree('${esc(node.name)}');event.stopPropagation()">${treeOpen.has(node.name)||true?'▾':'▸'}</button>`:`<span style="width:20px;flex-shrink:0"></span>`}
+        <span class="tree-name-text">${esc(node.name)}</span>
+        ${depth>0?`<span class="tree-depth-badge">L${depth}</span>`:''}
+        <div class="tree-actions">
+          <button class="btn btn-sm btn-danger" onclick="removeDept('${esc(node.name)}');event.stopPropagation()">削除</button>
+        </div>
+      </div>
+      ${hasChildren?`<div class="tree-children">${renderTreeNodes(node.children,depth+1)}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function toggleTree(name){
+  if(treeOpen.has(name))treeOpen.delete(name);else treeOpen.add(name);
+  renderDeptTree();
+}
+
+function updateDeptParentSelect(){
+  const sel=document.getElementById('dept-new-parent');
+  const cur=sel.value;
+  while(sel.options.length>1)sel.remove(1);
+  const tree=buildTree(depts);
+  flatDeptOptions(tree).forEach(({value,label})=>{
+    const o=document.createElement('option');o.value=value;o.textContent=label;
+    if(value===cur)o.selected=true;sel.appendChild(o);
+  });
+}
+
+function addDept(){
+  const name=document.getElementById('dept-new-name').value.trim();
+  const parent=document.getElementById('dept-new-parent').value;
+  if(!name)return;
+  if(depts.find(d=>d.name===name)){alert('同じ名前の部署が既に存在します');return;}
+  depts.push({name,parent});
+  document.getElementById('dept-new-name').value='';
+  if(parent)treeOpen.add(parent);
+  renderDeptTree(); initFilters();
+}
+
+function removeDept(name){
+  const toRemove=new Set();
+  function collectChildren(n){toRemove.add(n);depts.filter(d=>d.parent===n).forEach(d=>collectChildren(d.name));}
+  collectChildren(name);
+  if(toRemove.size>1&&!confirm(`「${name}」とその子部署（${toRemove.size-1}件）をまとめて削除しますか？`))return;
+  depts=depts.filter(d=>!toRemove.has(d.name));
+  renderDeptTree(); initFilters();
+}
+
+async function saveDeptMaster(){
+  showInd('saving','保存中...');
+  try{
+    const flat=treeToFlat(buildTree(depts));
+    const res=await gasPost('saveDepts',flat);
+    if(res.error)throw new Error(res.error);
+    depts=flat; // 順序をツリー順で更新
+    showInd('saved','部署マスタ保存済み ✓');
+  }catch(e){showInd('error','保存エラー: '+e.message);}
+}
 
 // ── フィルター初期化 ──
 function initFilters(){
@@ -307,35 +527,21 @@ function initFilters(){
   fillSelect('f-procurement',procOptions);
   const makers=[...new Set(pcData.map(r=>r._makerNorm).filter(Boolean))].sort();
   fillSelect('f-maker',makers);
-  // 部署フィルター（階層表示）
   const deptSel=document.getElementById('f-dept');
   const curDept=deptSel.value;
   while(deptSel.options.length>1)deptSel.remove(1);
-  const tree=buildTree(depts);
-  flatDeptOptions(tree).forEach(({value,label})=>{
+  flatDeptOptions(buildTree(depts)).forEach(({value,label})=>{
     const o=document.createElement('option');o.value=value;o.textContent=label;
     if(value===curDept)o.selected=true;deptSel.appendChild(o);
   });
 }
-
-function fillSelect(id,opts){
-  const el=document.getElementById(id);const cur=el.value;
-  while(el.options.length>1)el.remove(1);
-  opts.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;if(v===cur)o.selected=true;el.appendChild(o);});
-}
-
-function resetFilters(){
-  ['f-word','f-start-from','f-start-to','f-buy-from','f-renew-to'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  ['f-status','f-dept','f-task','f-procurement','f-maker'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  render();
-}
+function fillSelect(id,opts){const el=document.getElementById(id);const cur=el.value;while(el.options.length>1)el.remove(1);opts.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;if(v===cur)o.selected=true;el.appendChild(o);});}
+function resetFilters(){['f-word','f-start-from','f-start-to','f-buy-from','f-renew-to'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});['f-status','f-dept','f-task','f-procurement','f-maker'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});render();}
 
 // ── ソート・フィルター ──
 function setSort(k){if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=-1;}render();}
-
 function getFiltered(){
-  const q=v('f-word').toLowerCase();
-  const st=v('f-status'),dp=v('f-dept'),tk=v('f-task'),pr=v('f-procurement'),mk=v('f-maker');
+  const q=v('f-word').toLowerCase(),st=v('f-status'),dp=v('f-dept'),tk=v('f-task'),pr=v('f-procurement'),mk=v('f-maker');
   const sf=v('f-start-from'),st2=v('f-start-to'),bf=v('f-buy-from'),rt=v('f-renew-to');
   return pcData.filter(r=>{
     if(q&&!((['シリアル番号','ID(PC名)','ユーザー','メールアドレス','メーカー','部署','メモ'].map(k=>r[k]||'').join('')).toLowerCase().includes(q)))return false;
@@ -415,93 +621,7 @@ function render(){
     </tr>${detail}`;
   }).join('');
 }
-
 function toggleRow(id){if(expanded.has(id))expanded.delete(id);else expanded.add(id);render();}
-
-// ── 部署ツリー描画 ──
-function renderDeptTree(){
-  const tree=buildTree(depts);
-  const wrap=document.getElementById('dept-tree');
-  if(!depts.length){wrap.innerHTML='<p style="padding:1rem;font-size:13px;color:#aaa">まだ登録されていません</p>';return;}
-  wrap.innerHTML=renderTreeNodes(tree,0);
-  // 親部署選択肢も更新
-  updateDeptParentSelect();
-}
-
-function renderTreeNodes(nodes,depth){
-  return nodes.map(node=>{
-    const hasChildren=node.children&&node.children.length>0;
-    const isOpen=treeOpen.has(node.name);
-    const indent=depth*20;
-    const toggle=hasChildren
-      ?`<span class="tree-toggle" onclick="toggleTree('${esc(node.name)}')">${isOpen?'▾':'▸'}</span>`
-      :`<span class="tree-toggle leaf">•</span>`;
-    let html=`<div class="tree-node">
-      <div class="tree-row">
-        <div class="tree-indent" style="width:${indent}px"></div>
-        ${toggle}
-        <span class="tree-name">${esc(node.name)}</span>
-        <div class="tree-actions">
-          <button class="btn btn-sm btn-danger" onclick="removeDept('${esc(node.name)}')">削除</button>
-        </div>
-      </div>`;
-    if(hasChildren&&isOpen){
-      html+=`<div>${renderTreeNodes(node.children,depth+1)}</div>`;
-    }
-    html+=`</div>`;
-    return html;
-  }).join('');
-}
-
-function toggleTree(name){
-  if(treeOpen.has(name))treeOpen.delete(name);else treeOpen.add(name);
-  renderDeptTree();
-}
-
-function updateDeptParentSelect(){
-  const sel=document.getElementById('dept-new-parent');
-  const cur=sel.value;
-  while(sel.options.length>1)sel.remove(1);
-  const tree=buildTree(depts);
-  flatDeptOptions(tree).forEach(({value,label})=>{
-    const o=document.createElement('option');o.value=value;o.textContent=label;
-    if(value===cur)o.selected=true;sel.appendChild(o);
-  });
-}
-
-function addDept(){
-  const name=document.getElementById('dept-new-name').value.trim();
-  const parent=document.getElementById('dept-new-parent').value;
-  if(!name)return;
-  if(depts.find(d=>d.name===name)){alert('同じ名前の部署が既に存在します');return;}
-  depts.push({name,parent});
-  document.getElementById('dept-new-name').value='';
-  treeOpen.add(parent); // 追加した親を開く
-  renderDeptTree();
-  initFilters();
-}
-
-function removeDept(name){
-  // 子も含めて削除
-  const toRemove=new Set();
-  function collectChildren(n){
-    toRemove.add(n);
-    depts.filter(d=>d.parent===n).forEach(d=>collectChildren(d.name));
-  }
-  collectChildren(name);
-  depts=depts.filter(d=>!toRemove.has(d.name));
-  renderDeptTree();
-  initFilters();
-}
-
-async function saveDeptMaster(){
-  showInd('saving','保存中...');
-  try{
-    const res=await gasPost('saveDepts',depts);
-    if(res.error)throw new Error(res.error);
-    showInd('saved','部署マスタ保存済み ✓');
-  }catch(e){showInd('error','保存エラー: '+e.message);}
-}
 
 // ── 役職マスタ ──
 function renderPosList(){
@@ -517,7 +637,7 @@ async function savePosMaster(){
   catch(e){showInd('error','保存エラー: '+e.message);}
 }
 
-// ── 編集モーダル ──
+// ── PC編集モーダル ──
 const FIELDS=[
   {sec:'基本情報'},
   {k:'シリアル番号'},{k:'ID(PC名)'},{k:'メーカー'},
@@ -553,18 +673,11 @@ function showModal(r,isNew){
     const val=esc(r[f.k]||'');
     const cls='form-field'+(f.full?' full':'');
     let input='';
-    if(f.type==='select'){
-      input=`<select id="fm-${esc(f.k)}">${f.opts.map(o=>`<option value="${esc(o)}"${r[f.k]===o?' selected':''}>${esc(o)||'未設定'}</option>`).join('')}</select>`;
-    }else if(f.type==='select_dynamic'){
-      const opts=f.opt==='task'?taskOptions:procOptions;
-      input=`<select id="fm-${esc(f.k)}"><option value="">未設定</option>${opts.map(o=>`<option value="${esc(o)}"${r[f.k]===o?' selected':''}>${esc(o)}</option>`).join('')}</select>`;
-    }else if(f.type==='select_dept'){
-      input=`<select id="fm-${esc(f.k)}"><option value="">未設定</option>${deptOpts.map(({value,label})=>`<option value="${esc(value)}"${r[f.k]===value?' selected':''}>${esc(label)}</option>`).join('')}</select>`;
-    }else if(f.type==='textarea'){
-      input=`<textarea id="fm-${esc(f.k)}">${val}</textarea>`;
-    }else{
-      input=`<input id="fm-${esc(f.k)}" value="${val}">`;
-    }
+    if(f.type==='select')input=`<select id="fm-${esc(f.k)}">${f.opts.map(o=>`<option value="${esc(o)}"${r[f.k]===o?' selected':''}>${esc(o)||'未設定'}</option>`).join('')}</select>`;
+    else if(f.type==='select_dynamic'){const opts=f.opt==='task'?taskOptions:procOptions;input=`<select id="fm-${esc(f.k)}"><option value="">未設定</option>${opts.map(o=>`<option value="${esc(o)}"${r[f.k]===o?' selected':''}>${esc(o)}</option>`).join('')}</select>`;}
+    else if(f.type==='select_dept')input=`<select id="fm-${esc(f.k)}"><option value="">未設定</option>${deptOpts.map(({value,label})=>`<option value="${esc(value)}"${r[f.k]===value?' selected':''}>${esc(label)}</option>`).join('')}</select>`;
+    else if(f.type==='textarea')input=`<textarea id="fm-${esc(f.k)}">${val}</textarea>`;
+    else input=`<input id="fm-${esc(f.k)}" value="${val}">`;
     return`<div class="${cls}"><label>${esc(f.k)}</label>${input}</div>`;
   }).join('');
   document.getElementById('modal-content').innerHTML=`

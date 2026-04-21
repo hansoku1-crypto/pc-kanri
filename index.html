@@ -9,7 +9,6 @@
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;background:#f5f5f3;color:#1a1a1a}
 #app{max-width:1300px;margin:0 auto;padding:1rem}
 
-/* ナビ */
 .nav{display:flex;gap:8px;margin-bottom:1rem;border-bottom:1px solid #e0e0da;padding-bottom:.75rem;align-items:center;flex-wrap:wrap}
 .nav h1{font-size:16px;font-weight:700;margin-right:8px}
 .tab{font-size:13px;padding:5px 14px;border:0.5px solid #d0d0ca;border-radius:20px;background:#fff;cursor:pointer;color:#555}
@@ -17,7 +16,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
 .tab.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
 .nav-right{margin-left:auto;display:flex;gap:8px;align-items:center}
 
-/* フィルター */
 .filter-card{background:#fff;border:0.5px solid #e0e0da;border-radius:12px;padding:1rem;margin-bottom:1rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;align-items:end}
 .ff{display:flex;flex-direction:column;gap:3px}
 .ff label{font-size:11px;color:#888}
@@ -26,14 +24,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
 .filter-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;grid-column:1/-1;padding-top:8px;border-top:0.5px solid #eee;margin-top:2px}
 .rc{font-size:12px;color:#888;margin-left:auto}
 
-/* サマリー */
 .stats{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
-.stat{background:#fff;border:0.5px solid #e0e0da;border-radius:8px;padding:.5rem .9rem;display:flex;align-items:center;gap:8px}
+.stat{background:#fff;border:0.5px solid #e0e0da;border-radius:8px;padding:.5rem .9rem;display:flex;align-items:center;gap:6px}
 .stat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .stat-label{font-size:12px;color:#666}
-.stat-val{font-size:16px;font-weight:700;margin-left:4px}
+.stat-val{font-size:16px;font-weight:700;margin-left:2px}
 
-/* テーブル */
 .tbl-wrap{overflow-x:auto;border:0.5px solid #e0e0da;border-radius:12px;background:#fff;margin-bottom:1rem}
 table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
 th{background:#f8f8f6;padding:8px 10px;text-align:left;font-weight:500;font-size:11px;color:#888;white-space:nowrap;border-bottom:0.5px solid #e0e0da;cursor:pointer;user-select:none}
@@ -46,7 +42,6 @@ tr:hover td{background:#fafafa}
 .di label{font-size:11px;color:#888;display:block;margin-bottom:2px}
 .di span{font-size:13px;word-break:break-all}
 
-/* バッジ */
 .badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 8px;border-radius:10px;white-space:nowrap;font-weight:500}
 .badge-dot{width:6px;height:6px;border-radius:50%}
 .s-active{background:#E8F5E9;color:#2E7D32}
@@ -57,10 +52,7 @@ tr:hover td{background:#fafafa}
 .s-unknown{background:#FFEBEE;color:#B71C1C}
 .task-lend{background:#FFF3E0;color:#E65100}
 .task-return{background:#E8F5E9;color:#2E7D32}
-.office-ok{background:#EAF3DE;color:#3B6D11}
-.office-no{background:#F1EFE8;color:#5F5E5A}
 
-/* ボタン */
 .btn{font-size:12px;padding:5px 12px;border:0.5px solid #d0d0ca;border-radius:6px;background:#fff;cursor:pointer;color:#1a1a1a;white-space:nowrap}
 .btn:hover{background:#f5f5f3}
 .btn-primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
@@ -68,8 +60,9 @@ tr:hover td{background:#fafafa}
 .btn-danger{color:#c0392b;border-color:#e0a0a0}
 .btn-danger:hover{background:#fdf0f0}
 .btn-sm{font-size:11px;padding:3px 9px}
+.btn-icon{font-size:14px;padding:2px 6px;border:none;background:transparent;cursor:pointer;color:#888;line-height:1}
+.btn-icon:hover{color:#1a1a1a}
 
-/* モーダル */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;align-items:flex-start;justify-content:center;padding-top:40px;overflow-y:auto}
 .modal-overlay.open{display:flex}
 .modal{background:#fff;border-radius:12px;padding:1.5rem;width:min(700px,96vw);margin-bottom:40px;border:0.5px solid #e0e0da}
@@ -80,19 +73,41 @@ tr:hover td{background:#fafafa}
 .form-field label{font-size:12px;color:#888}
 .form-field input,.form-field select,.form-field textarea{font-size:13px;border:0.5px solid #d0d0ca;border-radius:6px;padding:6px 8px;background:#fff;color:#1a1a1a;outline:none;width:100%}
 .form-field textarea{resize:vertical;min-height:56px}
-.form-section{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.05em;grid-column:1/-1;margin-top:8px;padding-top:8px;border-top:0.5px solid #eee}
+.form-section{font-size:11px;font-weight:600;color:#888;letter-spacing:.05em;grid-column:1/-1;margin-top:8px;padding-top:8px;border-top:0.5px solid #eee}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem;padding-top:1rem;border-top:0.5px solid #eee}
 
-/* マスタ管理 */
+/* 部署ツリー */
 .master-panel{background:#fff;border:0.5px solid #e0e0da;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
 .master-panel h3{font-size:14px;font-weight:600;margin-bottom:.75rem}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem}
+.tree-wrap{border:0.5px solid #e0e0da;border-radius:8px;overflow:hidden;margin-bottom:1rem}
+.tree-node{border-bottom:0.5px solid #f0f0ea}
+.tree-node:last-child{border-bottom:none}
+.tree-row{display:flex;align-items:center;gap:6px;padding:7px 10px;background:#fff}
+.tree-row:hover{background:#fafafa}
+.tree-indent{flex-shrink:0}
+.tree-toggle{width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#aaa;font-size:11px;flex-shrink:0;border-radius:3px}
+.tree-toggle:hover{background:#f0f0ea;color:#555}
+.tree-toggle.leaf{cursor:default;color:transparent}
+.tree-name{flex:1;font-size:13px}
+.tree-parent{font-size:11px;color:#aaa;margin-left:4px}
+.tree-actions{display:flex;gap:4px;opacity:0}
+.tree-row:hover .tree-actions{opacity:1}
+
+.add-form{background:#f8f8f6;border-radius:8px;padding:1rem;margin-top:.5rem}
+.add-form h4{font-size:12px;font-weight:600;color:#888;margin-bottom:.75rem}
+.add-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+.add-field{display:flex;flex-direction:column;gap:3px;flex:1;min-width:140px}
+.add-field label{font-size:11px;color:#888}
+.add-field input,.add-field select{font-size:13px;border:0.5px solid #d0d0ca;border-radius:6px;padding:5px 8px;outline:none;background:#fff;color:#1a1a1a;width:100%}
+
+/* 役職マスタ */
 .master-list{display:flex;flex-direction:column;gap:4px;margin-bottom:.75rem;max-height:300px;overflow-y:auto}
 .master-item{display:flex;align-items:center;gap:8px;padding:6px 8px;background:#fafafa;border-radius:6px;border:0.5px solid #eee}
 .master-item span{flex:1;font-size:13px}
 .master-add{display:flex;gap:8px;margin-top:4px}
 .master-add input{flex:1;font-size:13px;border:0.5px solid #d0d0ca;border-radius:6px;padding:5px 8px;outline:none}
 
-/* ローディング */
 .loading{padding:3rem;text-align:center;color:#888}
 .spinner{display:inline-block;width:18px;height:18px;border:2px solid #e0e0da;border-top-color:#888;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -102,7 +117,6 @@ tr:hover td{background:#fafafa}
 .save-ind.error{color:#c0392b}
 .sort-arrow{font-size:10px;margin-left:2px}
 .empty{padding:3rem;text-align:center;color:#888}
-.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem}
 </style>
 </head>
 <body>
@@ -113,12 +127,12 @@ tr:hover td{background:#fafafa}
     <button class="tab" onclick="showTab('dept')">部署マスタ</button>
     <button class="tab" onclick="showTab('pos')">役職マスタ</button>
     <div class="nav-right">
-      <button class="btn" onclick="loadAll()" title="再読み込み">↺ 再読み込み</button>
+      <button class="btn" onclick="loadAll()">↺ 再読み込み</button>
       <span class="save-ind" id="save-ind"></span>
     </div>
   </div>
 
-  <!-- ハードウェア一覧タブ -->
+  <!-- ハードウェア一覧 -->
   <div id="tab-list">
     <div class="filter-card">
       <div class="ff"><label>フリーワード</label><input type="text" id="f-word" placeholder="シリアル番号・ID・ユーザー..." oninput="render()"></div>
@@ -129,15 +143,10 @@ tr:hover td{background:#fafafa}
           <option>準備中</option><option>廃棄・解約</option><option>所在不明</option>
         </select>
       </div>
-      <div class="ff"><label>管理者のタスク</label>
-        <select id="f-task" onchange="render()"><option value="">すべて</option></select>
-      </div>
-      <div class="ff"><label>調達方法</label>
-        <select id="f-procurement" onchange="render()"><option value="">すべて</option></select>
-      </div>
-      <div class="ff"><label>メーカー</label>
-        <select id="f-maker" onchange="render()"><option value="">すべて</option></select>
-      </div>
+      <div class="ff"><label>部署</label><select id="f-dept" onchange="render()"><option value="">すべて</option></select></div>
+      <div class="ff"><label>管理者のタスク</label><select id="f-task" onchange="render()"><option value="">すべて</option></select></div>
+      <div class="ff"><label>調達方法</label><select id="f-procurement" onchange="render()"><option value="">すべて</option></select></div>
+      <div class="ff"><label>メーカー</label><select id="f-maker" onchange="render()"><option value="">すべて</option></select></div>
       <div class="ff"><label>利用開始日（から）</label><input type="month" id="f-start-from" oninput="render()"></div>
       <div class="ff"><label>利用開始日（まで）</label><input type="month" id="f-start-to" oninput="render()"></div>
       <div class="ff"><label>購入/契約開始日（から）</label><input type="month" id="f-buy-from" oninput="render()"></div>
@@ -157,9 +166,10 @@ tr:hover td{background:#fafafa}
           <th style="width:110px" onclick="setSort('ID(PC名)')">ID(PC名)<span class="sort-arrow" id="s-ID(PC名)"></span></th>
           <th style="width:90px" onclick="setSort('ステータス')">ステータス<span class="sort-arrow" id="s-ステータス"></span></th>
           <th onclick="setSort('ユーザー')">ユーザー<span class="sort-arrow" id="s-ユーザー"></span></th>
-          <th style="width:90px" onclick="setSort('管理者のタスク')">タスク<span class="sort-arrow" id="s-管理者のタスク"></span></th>
+          <th style="width:130px" onclick="setSort('部署')">部署<span class="sort-arrow" id="s-部署"></span></th>
+          <th style="width:80px" onclick="setSort('管理者のタスク')">タスク<span class="sort-arrow" id="s-管理者のタスク"></span></th>
           <th style="width:90px" onclick="setSort('利用開始日')">利用開始日<span class="sort-arrow" id="s-利用開始日"></span></th>
-          <th style="width:90px">メーカー</th>
+          <th style="width:80px">メーカー</th>
           <th style="width:70px">操作</th>
         </tr></thead>
         <tbody id="tbody"></tbody>
@@ -167,32 +177,36 @@ tr:hover td{background:#fafafa}
     </div>
   </div>
 
-  <!-- 部署マスタタブ -->
+  <!-- 部署マスタ -->
   <div id="tab-dept" style="display:none">
     <div class="master-panel">
       <div class="section-header">
-        <h3>部署マスタ</h3>
-        <button class="btn btn-primary btn-sm" onclick="saveMaster('dept')">保存</button>
+        <h3>部署マスタ（3階層対応）</h3>
+        <button class="btn btn-primary btn-sm" onclick="saveDeptMaster()">スプレッドシートに保存</button>
       </div>
-      <div class="master-list" id="dept-list"></div>
-      <div class="master-add">
-        <input type="text" id="dept-new" placeholder="新しい部署名を入力...">
-        <button class="btn" onclick="addMasterItem('dept')">追加</button>
+      <div class="tree-wrap" id="dept-tree"></div>
+      <div class="add-form">
+        <h4>部署を追加</h4>
+        <div class="add-row">
+          <div class="add-field"><label>部署名</label><input type="text" id="dept-new-name" placeholder="例：串カツ田中立川店"></div>
+          <div class="add-field"><label>親部署（任意）</label><select id="dept-new-parent"><option value="">なし（最上位）</option></select></div>
+          <button class="btn btn-primary" onclick="addDept()" style="flex-shrink:0">追加</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- 役職マスタタブ -->
+  <!-- 役職マスタ -->
   <div id="tab-pos" style="display:none">
     <div class="master-panel">
       <div class="section-header">
         <h3>役職マスタ</h3>
-        <button class="btn btn-primary btn-sm" onclick="saveMaster('pos')">保存</button>
+        <button class="btn btn-primary btn-sm" onclick="savePosMaster()">スプレッドシートに保存</button>
       </div>
       <div class="master-list" id="pos-list"></div>
       <div class="master-add">
         <input type="text" id="pos-new" placeholder="新しい役職名を入力...">
-        <button class="btn" onclick="addMasterItem('pos')">追加</button>
+        <button class="btn" onclick="addPosition()">追加</button>
       </div>
     </div>
   </div>
@@ -206,144 +220,159 @@ tr:hover td{background:#fafafa}
 <script>
 const GAS_URL = 'https://script.google.com/macros/s/AKfycby11ubaJ5zmNlNvP_iXxQofudIlkbtaugltwSdgfqBq3sEkcs5eWUf6ukFo8V6eHUqU/exec';
 
-// デフォルト選択肢（スプレッドシートから取得したものとマージ）
-const DEFAULT_TASKS        = ['貸出','返却','なし'];
-const DEFAULT_PROCUREMENT  = ['購入','リース契約','レンタル'];
-const STATUS_LIST          = ['利用中','利用予定','在庫','準備中','廃棄・解約','所在不明'];
+const DEFAULT_TASKS       = ['貸出','返却','なし'];
+const DEFAULT_PROCUREMENT = ['購入','リース契約','レンタル'];
+const STATUS_LIST         = ['利用中','利用予定','在庫','準備中','廃棄・解約','所在不明'];
+const STATUS_CLASS = {'利用中':'s-active','利用予定':'s-scheduled','在庫':'s-stock','準備中':'s-prep','廃棄・解約':'s-disposed','所在不明':'s-unknown'};
+const STATUS_COLOR = {'利用中':'#4CAF50','利用予定':'#2196F3','在庫':'#9C27B0','準備中':'#FF9800','廃棄・解約':'#795548','所在不明':'#F44336'};
 
-let pcData = [], depts = [], positions = [];
-let taskOptions = [...DEFAULT_TASKS];
-let procOptions = [...DEFAULT_PROCUREMENT];
-let sortKey = '利用開始日', sortDir = -1, expanded = new Set();
+let pcData=[], depts=[], positions=[];
+let taskOptions=[...DEFAULT_TASKS], procOptions=[...DEFAULT_PROCUREMENT];
+let sortKey='利用開始日', sortDir=-1, expanded=new Set();
+let treeOpen=new Set(); // 開いているノード
 
-// ── ステータス色 ──
-const STATUS_CLASS = {
-  '利用中':'s-active','利用予定':'s-scheduled','在庫':'s-stock',
-  '準備中':'s-prep','廃棄・解約':'s-disposed','所在不明':'s-unknown'
-};
-const STATUS_COLOR = {
-  '利用中':'#4CAF50','利用予定':'#2196F3','在庫':'#9C27B0',
-  '準備中':'#FF9800','廃棄・解約':'#795548','所在不明':'#F44336'
-};
-
-function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function normDate(s){ if(!s)return''; const d=s.trim(); if(/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(d)){const p=d.split('/');return`${p[0]}-${p[1].padStart(2,'0')}-${p[2].padStart(2,'0')}`;} if(/^\d{8}$/.test(d))return`${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`; return d; }
-function normMaker(s){ if(!s)return''; const t=s.trim().toUpperCase(); if(t.startsWith('LENOVO'))return'Lenovo'; if(t.startsWith('DELL'))return'DELL'; if(t.startsWith('HP'))return'HP'; if(t.includes('マウス')||t.includes('MOUSE'))return'マウスコンピュータ'; return s.trim(); }
-
-function showInd(state, msg){ const el=document.getElementById('save-ind'); el.className='save-ind '+state; el.textContent=msg||''; if(state==='saved')setTimeout(()=>{el.textContent='';el.className='save-ind';},3000); }
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function normDate(s){if(!s)return'';const d=s.trim();if(/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(d)){const p=d.split('/');return`${p[0]}-${p[1].padStart(2,'0')}-${p[2].padStart(2,'0')}`;}if(/^\d{8}$/.test(d))return`${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`;return d;}
+function normMaker(s){if(!s)return'';const t=s.trim().toUpperCase();if(t.startsWith('LENOVO'))return'Lenovo';if(t.startsWith('DELL'))return'DELL';if(t.startsWith('HP'))return'HP';if(t.includes('マウス')||t.includes('MOUSE'))return'マウスコンピュータ';return s.trim();}
+function showInd(state,msg){const el=document.getElementById('save-ind');el.className='save-ind '+state;el.textContent=msg||'';if(state==='saved')setTimeout(()=>{el.textContent='';el.className='save-ind';},3000);}
+function v(id){const el=document.getElementById(id);return el?el.value:'';}
 
 // ── タブ ──
 function showTab(name){
-  ['list','dept','pos'].forEach(t=>{ document.getElementById('tab-'+t).style.display=t===name?'':'none'; });
-  document.querySelectorAll('.tab').forEach((el,i)=>{ el.classList.toggle('active',['list','dept','pos'][i]===name); });
+  ['list','dept','pos'].forEach(t=>{document.getElementById('tab-'+t).style.display=t===name?'':'none';});
+  document.querySelectorAll('.tab').forEach((el,i)=>{el.classList.toggle('active',['list','dept','pos'][i]===name);});
 }
 
-// ── データ読み込み ──
-async function gasGet(action){ const res=await fetch(GAS_URL+'?action='+action); return res.json(); }
-async function gasPost(action,data){ const res=await fetch(GAS_URL+'?action='+action+'&data='+encodeURIComponent(JSON.stringify(data))); return res.json(); }
+// ── API ──
+async function gasGet(action){const res=await fetch(GAS_URL+'?action='+action);return res.json();}
+async function gasPost(action,data){const res=await fetch(GAS_URL+'?action='+action+'&data='+encodeURIComponent(JSON.stringify(data)));return res.json();}
 
 async function loadAll(){
   showInd('saving','読み込み中...');
-  document.getElementById('tbody').innerHTML='<tr><td colspan="9" class="loading"><span class="spinner"></span>読み込み中...</td></tr>';
-  try {
-    const [pc, dept, pos] = await Promise.all([gasGet('getAll'), gasGet('getDepts'), gasGet('getPositions')]);
-    if(pc.error) throw new Error(pc.error);
-    pcData = (Array.isArray(pc)?pc:[]).map((r,i)=>({_id:i,...r,_makerNorm:normMaker(r['メーカー'])}));
-    depts = Array.isArray(dept)?dept:[];
-    positions = Array.isArray(pos)?pos:[];
-    // タスク・調達方法は既存データから収集してデフォルトとマージ
-    const allTasks = new Set([...DEFAULT_TASKS,...pcData.map(r=>r['管理者のタスク']).filter(Boolean)]);
-    const allProc  = new Set([...DEFAULT_PROCUREMENT,...pcData.map(r=>r['調達方法']).filter(Boolean)]);
-    taskOptions = [...allTasks];
-    procOptions = [...allProc];
-    initFilters();
-    renderMasterList('dept');
-    renderMasterList('pos');
-    render();
+  document.getElementById('tbody').innerHTML='<tr><td colspan="10" class="loading"><span class="spinner"></span>読み込み中...</td></tr>';
+  try{
+    const [pc,dept,pos]=await Promise.all([gasGet('getAll'),gasGet('getDepts'),gasGet('getPositions')]);
+    if(pc.error)throw new Error(pc.error);
+    pcData=(Array.isArray(pc)?pc:[]).map((r,i)=>({_id:i,...r,_makerNorm:normMaker(r['メーカー'])}));
+    depts=Array.isArray(dept)?dept:[];
+    positions=Array.isArray(pos)?pos:[];
+    const allTasks=new Set([...DEFAULT_TASKS,...pcData.map(r=>r['管理者のタスク']).filter(Boolean)]);
+    const allProc=new Set([...DEFAULT_PROCUREMENT,...pcData.map(r=>r['調達方法']).filter(Boolean)]);
+    taskOptions=[...allTasks]; procOptions=[...allProc];
+    initFilters(); renderDeptTree(); renderPosList(); render();
     showInd('saved','読み込み完了');
-  } catch(e){ showInd('error','エラー: '+e.message); }
+  }catch(e){showInd('error','エラー: '+e.message);}
 }
 
 async function savePC(){
   showInd('saving','保存中...');
-  try {
-    const payload = pcData.map(r=>{ const rec={}; Object.keys(r).filter(k=>!k.startsWith('_')).forEach(k=>{rec[k]=r[k]||'';}); return rec; });
-    const res = await gasPost('saveAll', payload);
-    if(res.error) throw new Error(res.error);
+  try{
+    const payload=pcData.map(r=>{const rec={};Object.keys(r).filter(k=>!k.startsWith('_')).forEach(k=>{rec[k]=r[k]||'';});return rec;});
+    const res=await gasPost('saveAll',payload);
+    if(res.error)throw new Error(res.error);
     showInd('saved',`保存済み ✓ (${res.saved}件)`);
-  } catch(e){ showInd('error','保存エラー: '+e.message); }
+  }catch(e){showInd('error','保存エラー: '+e.message);}
 }
+
+// ── 部署ツリーのユーティリティ ──
+
+// ツリー構造を構築: [{name,parent}] → ネストされた配列
+function buildTree(items){
+  const roots=[], map={};
+  items.forEach(d=>{map[d.name]={...d,children:[]};});
+  items.forEach(d=>{
+    if(d.parent&&map[d.parent]){map[d.parent].children.push(map[d.name]);}
+    else{roots.push(map[d.name]);}
+  });
+  return roots;
+}
+
+// フラットなパス付き選択肢を生成: [{value, label}]
+function flatDeptOptions(tree, prefix='', depth=0){
+  const opts=[];
+  tree.forEach(node=>{
+    const indent='　'.repeat(depth);
+    opts.push({value:node.name, label:indent+node.name});
+    if(node.children.length>0) opts.push(...flatDeptOptions(node.children,'',depth+1));
+  });
+  return opts;
+}
+
+// 全部署名をフラットに取得
+function allDeptNames(){return depts.map(d=>d.name);}
 
 // ── フィルター初期化 ──
 function initFilters(){
-  fillSelect('f-task', taskOptions);
-  fillSelect('f-procurement', procOptions);
-  const makers = [...new Set(pcData.map(r=>r._makerNorm).filter(Boolean))].sort();
-  fillSelect('f-maker', makers);
+  fillSelect('f-task',taskOptions);
+  fillSelect('f-procurement',procOptions);
+  const makers=[...new Set(pcData.map(r=>r._makerNorm).filter(Boolean))].sort();
+  fillSelect('f-maker',makers);
+  // 部署フィルター（階層表示）
+  const deptSel=document.getElementById('f-dept');
+  const curDept=deptSel.value;
+  while(deptSel.options.length>1)deptSel.remove(1);
+  const tree=buildTree(depts);
+  flatDeptOptions(tree).forEach(({value,label})=>{
+    const o=document.createElement('option');o.value=value;o.textContent=label;
+    if(value===curDept)o.selected=true;deptSel.appendChild(o);
+  });
 }
-function fillSelect(id, opts){ const el=document.getElementById(id); const cur=el.value; while(el.options.length>1)el.remove(1); opts.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;if(v===cur)o.selected=true;el.appendChild(o);}); }
+
+function fillSelect(id,opts){
+  const el=document.getElementById(id);const cur=el.value;
+  while(el.options.length>1)el.remove(1);
+  opts.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;if(v===cur)o.selected=true;el.appendChild(o);});
+}
 
 function resetFilters(){
   ['f-word','f-start-from','f-start-to','f-buy-from','f-renew-to'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  ['f-status','f-task','f-procurement','f-maker'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['f-status','f-dept','f-task','f-procurement','f-maker'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   render();
 }
 
-// ── フィルター・ソート ──
-function setSort(k){ if(sortKey===k)sortDir*=-1; else{sortKey=k;sortDir=-1;} render(); }
+// ── ソート・フィルター ──
+function setSort(k){if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=-1;}render();}
 
 function getFiltered(){
-  const q=(document.getElementById('f-word')||{value:''}).value.toLowerCase();
-  const st=v('f-status'), tk=v('f-task'), pc2=v('f-procurement'), mk=v('f-maker');
-  const sf=v('f-start-from'), st2=v('f-start-to'), bf=v('f-buy-from'), rt=v('f-renew-to');
+  const q=v('f-word').toLowerCase();
+  const st=v('f-status'),dp=v('f-dept'),tk=v('f-task'),pr=v('f-procurement'),mk=v('f-maker');
+  const sf=v('f-start-from'),st2=v('f-start-to'),bf=v('f-buy-from'),rt=v('f-renew-to');
   return pcData.filter(r=>{
-    if(q&&!(['シリアル番号','ID(PC名)','ユーザー','メールアドレス','メーカー','管理者のタスク','メモ'].map(k=>r[k]||'').join('')).toLowerCase().includes(q))return false;
+    if(q&&!((['シリアル番号','ID(PC名)','ユーザー','メールアドレス','メーカー','部署','メモ'].map(k=>r[k]||'').join('')).toLowerCase().includes(q)))return false;
     if(st&&r['ステータス']!==st)return false;
+    if(dp&&r['部署']!==dp)return false;
     if(tk&&r['管理者のタスク']!==tk)return false;
-    if(pc2&&r['調達方法']!==pc2)return false;
+    if(pr&&r['調達方法']!==pr)return false;
     if(mk&&r._makerNorm!==mk)return false;
-    if(sf||st2){const ym=normDate(r['利用開始日']).substring(0,7); if(sf&&ym&&ym<sf)return false; if(st2&&ym&&ym>st2)return false;}
-    if(bf){const ym=normDate(r['購入/契約開始日']).substring(0,7); if(ym&&ym<bf)return false;}
-    if(rt){const ym=normDate(r['契約更新日']).substring(0,7); if(ym&&ym>rt)return false;}
+    if(sf||st2){const ym=normDate(r['利用開始日']).substring(0,7);if(sf&&ym&&ym<sf)return false;if(st2&&ym&&ym>st2)return false;}
+    if(bf){const ym=normDate(r['購入/契約開始日']).substring(0,7);if(ym&&ym<bf)return false;}
+    if(rt){const ym=normDate(r['契約更新日']).substring(0,7);if(ym&&ym>rt)return false;}
     return true;
-  }).sort((a,b)=>{ const va=a[sortKey]||'',vb=b[sortKey]||''; return va<vb?-sortDir:va>vb?sortDir:0; });
+  }).sort((a,b)=>{const va=a[sortKey]||'',vb=b[sortKey]||'';return va<vb?-sortDir:va>vb?sortDir:0;});
 }
-function v(id){ const el=document.getElementById(id); return el?el.value:''; }
 
-// ── レンダリング ──
+// ── メインレンダリング ──
 function render(){
-  const rows = getFiltered();
-  // サマリー
-  const counts = {};
-  STATUS_LIST.forEach(s=>counts[s]=0);
-  pcData.forEach(r=>{ if(counts[r['ステータス']]!==undefined)counts[r['ステータス']]++; });
-  document.getElementById('stats').innerHTML = STATUS_LIST.map(s=>`
-    <div class="stat">
-      <div class="stat-dot" style="background:${STATUS_COLOR[s]}"></div>
-      <span class="stat-label">${s}</span>
-      <span class="stat-val">${counts[s]}</span>
-    </div>`).join('') + `<div class="stat"><span class="stat-label">合計</span><span class="stat-val">${pcData.length}</span></div>`;
-  document.getElementById('result-count').textContent = rows.length<pcData.length?`${pcData.length}件中 ${rows.length}件表示`:'';
-
-  // ソート矢印
-  ['シリアル番号','ID(PC名)','ステータス','ユーザー','管理者のタスク','利用開始日'].forEach(k=>{
-    const el=document.getElementById('s-'+k); if(el)el.textContent=sortKey===k?(sortDir>0?'▲':'▼'):'';
-  });
-
+  const rows=getFiltered();
+  const counts={};STATUS_LIST.forEach(s=>counts[s]=0);
+  pcData.forEach(r=>{if(counts[r['ステータス']]!==undefined)counts[r['ステータス']]++;});
+  document.getElementById('stats').innerHTML=STATUS_LIST.map(s=>`<div class="stat"><div class="stat-dot" style="background:${STATUS_COLOR[s]}"></div><span class="stat-label">${s}</span><span class="stat-val">${counts[s]}</span></div>`).join('')+`<div class="stat"><span class="stat-label">合計</span><span class="stat-val">${pcData.length}</span></div>`;
+  document.getElementById('result-count').textContent=rows.length<pcData.length?`${pcData.length}件中 ${rows.length}件表示`:'';
+  ['シリアル番号','ID(PC名)','ステータス','ユーザー','部署','管理者のタスク','利用開始日'].forEach(k=>{const el=document.getElementById('s-'+k);if(el)el.textContent=sortKey===k?(sortDir>0?'▲':'▼'):'';});
   const tbody=document.getElementById('tbody');
-  if(!rows.length){tbody.innerHTML=`<tr><td colspan="9" class="empty">該当するPCが見つかりません</td></tr>`;return;}
-
+  if(!rows.length){tbody.innerHTML=`<tr><td colspan="10" class="empty">該当するPCが見つかりません</td></tr>`;return;}
   tbody.innerHTML=rows.map(r=>{
     const sc=STATUS_CLASS[r['ステータス']]||'';
     const statusBadge=r['ステータス']?`<span class="badge ${sc}"><span class="badge-dot" style="background:${STATUS_COLOR[r['ステータス']]||'#999'}"></span>${esc(r['ステータス'])}</span>`:'—';
     const taskBadge=r['管理者のタスク']&&r['管理者のタスク']!=='なし'?`<span class="badge ${r['管理者のタスク']==='貸出'?'task-lend':'task-return'}">${esc(r['管理者のタスク'])}</span>`:r['管理者のタスク']||'—';
-    const detail=expanded.has(r._id)?`<tr class="row-detail"><td colspan="9">
+    const detail=expanded.has(r._id)?`<tr class="row-detail"><td colspan="10">
       <div class="detail-grid">
         <div class="di"><label>シリアル番号</label><span>${esc(r['シリアル番号'])||'—'}</span></div>
         <div class="di"><label>ID(PC名)</label><span>${esc(r['ID(PC名)'])||'—'}</span></div>
         <div class="di"><label>ステータス</label><span>${esc(r['ステータス'])||'—'}</span></div>
         <div class="di"><label>ユーザー</label><span>${esc(r['ユーザー'])||'—'}</span></div>
         <div class="di"><label>メールアドレス</label><span>${esc(r['メールアドレス'])||'—'}</span></div>
+        <div class="di"><label>部署</label><span>${esc(r['部署'])||'—'}</span></div>
         <div class="di"><label>管理者のタスク</label><span>${esc(r['管理者のタスク'])||'—'}</span></div>
         <div class="di"><label>利用開始日</label><span>${esc(r['利用開始日'])||'—'}</span></div>
         <div class="di"><label>利用終了日</label><span>${esc(r['利用終了日'])||'—'}</span></div>
@@ -372,12 +401,13 @@ function render(){
         <button class="btn btn-sm" onclick="toggleRow(${r._id});event.stopPropagation()">閉じる</button>
       </div>
     </td></tr>`:'';
-    return `<tr onclick="toggleRow(${r._id})" style="cursor:pointer">
+    return`<tr onclick="toggleRow(${r._id})" style="cursor:pointer">
       <td style="text-align:center;color:#aaa">${expanded.has(r._id)?'▾':'▸'}</td>
       <td style="font-family:monospace;font-size:12px">${esc((r['シリアル番号']||'—').substring(0,18))}</td>
       <td style="font-size:12px">${esc(r['ID(PC名)'])||'—'}</td>
       <td>${statusBadge}</td>
       <td>${esc((r['ユーザー']||'—').substring(0,20))}</td>
+      <td style="font-size:12px">${esc(r['部署'])||'—'}</td>
       <td>${taskBadge}</td>
       <td style="font-size:12px">${esc(r['利用開始日'])||'—'}</td>
       <td style="font-size:12px">${esc(r._makerNorm)||'—'}</td>
@@ -386,36 +416,138 @@ function render(){
   }).join('');
 }
 
-function toggleRow(id){ if(expanded.has(id))expanded.delete(id); else expanded.add(id); render(); }
+function toggleRow(id){if(expanded.has(id))expanded.delete(id);else expanded.add(id);render();}
+
+// ── 部署ツリー描画 ──
+function renderDeptTree(){
+  const tree=buildTree(depts);
+  const wrap=document.getElementById('dept-tree');
+  if(!depts.length){wrap.innerHTML='<p style="padding:1rem;font-size:13px;color:#aaa">まだ登録されていません</p>';return;}
+  wrap.innerHTML=renderTreeNodes(tree,0);
+  // 親部署選択肢も更新
+  updateDeptParentSelect();
+}
+
+function renderTreeNodes(nodes,depth){
+  return nodes.map(node=>{
+    const hasChildren=node.children&&node.children.length>0;
+    const isOpen=treeOpen.has(node.name);
+    const indent=depth*20;
+    const toggle=hasChildren
+      ?`<span class="tree-toggle" onclick="toggleTree('${esc(node.name)}')">${isOpen?'▾':'▸'}</span>`
+      :`<span class="tree-toggle leaf">•</span>`;
+    let html=`<div class="tree-node">
+      <div class="tree-row">
+        <div class="tree-indent" style="width:${indent}px"></div>
+        ${toggle}
+        <span class="tree-name">${esc(node.name)}</span>
+        <div class="tree-actions">
+          <button class="btn btn-sm btn-danger" onclick="removeDept('${esc(node.name)}')">削除</button>
+        </div>
+      </div>`;
+    if(hasChildren&&isOpen){
+      html+=`<div>${renderTreeNodes(node.children,depth+1)}</div>`;
+    }
+    html+=`</div>`;
+    return html;
+  }).join('');
+}
+
+function toggleTree(name){
+  if(treeOpen.has(name))treeOpen.delete(name);else treeOpen.add(name);
+  renderDeptTree();
+}
+
+function updateDeptParentSelect(){
+  const sel=document.getElementById('dept-new-parent');
+  const cur=sel.value;
+  while(sel.options.length>1)sel.remove(1);
+  const tree=buildTree(depts);
+  flatDeptOptions(tree).forEach(({value,label})=>{
+    const o=document.createElement('option');o.value=value;o.textContent=label;
+    if(value===cur)o.selected=true;sel.appendChild(o);
+  });
+}
+
+function addDept(){
+  const name=document.getElementById('dept-new-name').value.trim();
+  const parent=document.getElementById('dept-new-parent').value;
+  if(!name)return;
+  if(depts.find(d=>d.name===name)){alert('同じ名前の部署が既に存在します');return;}
+  depts.push({name,parent});
+  document.getElementById('dept-new-name').value='';
+  treeOpen.add(parent); // 追加した親を開く
+  renderDeptTree();
+  initFilters();
+}
+
+function removeDept(name){
+  // 子も含めて削除
+  const toRemove=new Set();
+  function collectChildren(n){
+    toRemove.add(n);
+    depts.filter(d=>d.parent===n).forEach(d=>collectChildren(d.name));
+  }
+  collectChildren(name);
+  depts=depts.filter(d=>!toRemove.has(d.name));
+  renderDeptTree();
+  initFilters();
+}
+
+async function saveDeptMaster(){
+  showInd('saving','保存中...');
+  try{
+    const res=await gasPost('saveDepts',depts);
+    if(res.error)throw new Error(res.error);
+    showInd('saved','部署マスタ保存済み ✓');
+  }catch(e){showInd('error','保存エラー: '+e.message);}
+}
+
+// ── 役職マスタ ──
+function renderPosList(){
+  const el=document.getElementById('pos-list');
+  if(!positions.length){el.innerHTML='<p style="font-size:13px;color:#aaa;padding:8px">まだ登録されていません</p>';return;}
+  el.innerHTML=positions.map((item,i)=>`<div class="master-item"><span>${esc(item)}</span><button class="btn btn-sm btn-danger" onclick="removePosition(${i})">削除</button></div>`).join('');
+}
+function addPosition(){const input=document.getElementById('pos-new');const val=input.value.trim();if(!val)return;positions.push(val);input.value='';renderPosList();}
+function removePosition(idx){positions.splice(idx,1);renderPosList();}
+async function savePosMaster(){
+  showInd('saving','保存中...');
+  try{const res=await gasPost('savePositions',positions);if(res.error)throw new Error(res.error);showInd('saved','役職マスタ保存済み ✓');}
+  catch(e){showInd('error','保存エラー: '+e.message);}
+}
 
 // ── 編集モーダル ──
-const FIELDS = [
+const FIELDS=[
   {sec:'基本情報'},
-  {k:'シリアル番号',full:false},{k:'ID(PC名)',full:false},{k:'メーカー',full:false},
-  {k:'ステータス',type:'select',opts:STATUS_LIST,full:false},
-  {k:'管理者のタスク',type:'select_dynamic',opt:'task',full:false},
-  {k:'ハードウェア割当',full:false},{k:'管理グループ',full:false},
+  {k:'シリアル番号'},{k:'ID(PC名)'},{k:'メーカー'},
+  {k:'ステータス',type:'select',opts:STATUS_LIST},
+  {k:'管理者のタスク',type:'select_dynamic',opt:'task'},
+  {k:'ハードウェア割当'},{k:'管理グループ'},
   {sec:'利用者情報'},
-  {k:'ユーザー',full:false},{k:'メールアドレス',full:true},
-  {k:'利用開始日',full:false},{k:'利用終了日',full:false},
+  {k:'ユーザー'},{k:'メールアドレス',full:true},
+  {k:'部署',type:'select_dept'},
+  {k:'利用開始日'},{k:'利用終了日'},
   {sec:'管理者'},
   {k:'管理者(メールアドレス)',full:true},
   {sec:'調達・費用'},
-  {k:'調達方法',type:'select_dynamic',opt:'proc',full:false},
-  {k:'支払い周期',full:false},{k:'購入/利用料金',full:false},{k:'通貨',full:false},
-  {k:'購入/契約開始日',full:false},{k:'廃棄日/解約日',full:false},{k:'契約更新日',full:false},
+  {k:'調達方法',type:'select_dynamic',opt:'proc'},
+  {k:'支払い周期'},{k:'購入/利用料金'},{k:'通貨'},
+  {k:'購入/契約開始日'},{k:'廃棄日/解約日'},{k:'契約更新日'},
   {sec:'アカウント情報'},
-  {k:'Officeアカウント',full:true},{k:'Officeパス',full:false},
-  {k:'Microsoftアカウント',full:true},{k:'Microsoftパス',full:false},
-  {k:'PIN',full:false},{k:'Office助成金',type:'select',opts:['','◯','ー'],full:false},{k:'Office追加日',full:false},
+  {k:'Officeアカウント',full:true},{k:'Officeパス'},
+  {k:'Microsoftアカウント',full:true},{k:'Microsoftパス'},
+  {k:'PIN'},{k:'Office助成金',type:'select',opts:['','◯','ー']},{k:'Office追加日'},
   {sec:'その他'},
   {k:'メモ',type:'textarea',full:true},
 ];
 
-function openAdd(){ showModal({_id:Date.now()},true); }
-function openEdit(id){ const r=pcData.find(x=>x._id===id); if(r)showModal(r,false); }
+function openAdd(){showModal({_id:Date.now()},true);}
+function openEdit(id){const r=pcData.find(x=>x._id===id);if(r)showModal(r,false);}
 
 function showModal(r,isNew){
+  const tree=buildTree(depts);
+  const deptOpts=flatDeptOptions(tree);
   const rows=FIELDS.map(f=>{
     if(f.sec)return`<div class="form-section">${esc(f.sec)}</div>`;
     const val=esc(r[f.k]||'');
@@ -423,17 +555,18 @@ function showModal(r,isNew){
     let input='';
     if(f.type==='select'){
       input=`<select id="fm-${esc(f.k)}">${f.opts.map(o=>`<option value="${esc(o)}"${r[f.k]===o?' selected':''}>${esc(o)||'未設定'}</option>`).join('')}</select>`;
-    } else if(f.type==='select_dynamic'){
+    }else if(f.type==='select_dynamic'){
       const opts=f.opt==='task'?taskOptions:procOptions;
       input=`<select id="fm-${esc(f.k)}"><option value="">未設定</option>${opts.map(o=>`<option value="${esc(o)}"${r[f.k]===o?' selected':''}>${esc(o)}</option>`).join('')}</select>`;
-    } else if(f.type==='textarea'){
+    }else if(f.type==='select_dept'){
+      input=`<select id="fm-${esc(f.k)}"><option value="">未設定</option>${deptOpts.map(({value,label})=>`<option value="${esc(value)}"${r[f.k]===value?' selected':''}>${esc(label)}</option>`).join('')}</select>`;
+    }else if(f.type==='textarea'){
       input=`<textarea id="fm-${esc(f.k)}">${val}</textarea>`;
-    } else {
+    }else{
       input=`<input id="fm-${esc(f.k)}" value="${val}">`;
     }
     return`<div class="${cls}"><label>${esc(f.k)}</label>${input}</div>`;
   }).join('');
-
   document.getElementById('modal-content').innerHTML=`
     <h2>${isNew?'新規PC登録':'PC情報を編集'}</h2>
     <div class="form-grid">${rows}</div>
@@ -444,21 +577,20 @@ function showModal(r,isNew){
   document.getElementById('modal-overlay').classList.add('open');
 }
 
-function closeModal(){ document.getElementById('modal-overlay').classList.remove('open'); }
-function onOverlayClick(e){ if(e.target===document.getElementById('modal-overlay'))closeModal(); }
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+function onOverlayClick(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
 
 async function saveRecord(id,isNew){
   const rec={_id:id};
-  FIELDS.filter(f=>f.k).forEach(f=>{ const el=document.getElementById('fm-'+f.k); rec[f.k]=el?el.value:''; });
+  FIELDS.filter(f=>f.k).forEach(f=>{const el=document.getElementById('fm-'+f.k);rec[f.k]=el?el.value:'';});
   rec._makerNorm=normMaker(rec['メーカー']);
   if(isNew)pcData.push(rec);
-  else{ const i=pcData.findIndex(x=>x._id===id); if(i>=0)pcData[i]=rec; }
-  closeModal(); initFilters(); render();
-  await savePC();
+  else{const i=pcData.findIndex(x=>x._id===id);if(i>=0)pcData[i]=rec;}
+  closeModal();initFilters();render();await savePC();
 }
 
 function confirmDelete(id){
-  const r=pcData.find(x=>x._id===id); if(!r)return;
+  const r=pcData.find(x=>x._id===id);if(!r)return;
   document.getElementById('modal-content').innerHTML=`
     <h2>削除の確認</h2>
     <p style="font-size:14px;color:#888;margin-bottom:.75rem">以下のPCをスプレッドシートから削除します。</p>
@@ -471,48 +603,10 @@ function confirmDelete(id){
 }
 
 async function deleteRecord(id){
-  pcData=pcData.filter(x=>x._id!==id); expanded.delete(id);
-  closeModal(); render(); await savePC();
+  pcData=pcData.filter(x=>x._id!==id);expanded.delete(id);
+  closeModal();render();await savePC();
 }
 
-// ── マスタ管理 ──
-function renderMasterList(type){
-  const items=type==='dept'?depts:positions;
-  const listEl=document.getElementById(type+'-list');
-  if(!items.length){listEl.innerHTML='<p style="font-size:13px;color:#aaa;padding:8px">まだ登録されていません</p>';return;}
-  listEl.innerHTML=items.map((item,i)=>`
-    <div class="master-item" id="${type}-item-${i}">
-      <span>${esc(item)}</span>
-      <button class="btn btn-sm btn-danger" onclick="removeMasterItem('${type}',${i})">削除</button>
-    </div>`).join('');
-}
-
-function addMasterItem(type){
-  const input=document.getElementById(type+'-new');
-  const val=input.value.trim();
-  if(!val)return;
-  if(type==='dept')depts.push(val); else positions.push(val);
-  input.value='';
-  renderMasterList(type);
-}
-
-function removeMasterItem(type,idx){
-  if(type==='dept')depts.splice(idx,1); else positions.splice(idx,1);
-  renderMasterList(type);
-}
-
-async function saveMaster(type){
-  const action=type==='dept'?'saveDepts':'savePositions';
-  const data=type==='dept'?depts:positions;
-  showInd('saving','保存中...');
-  try{
-    const res=await gasPost(action,data);
-    if(res.error)throw new Error(res.error);
-    showInd('saved','マスタ保存済み ✓');
-  }catch(e){ showInd('error','保存エラー: '+e.message); }
-}
-
-// 起動
 loadAll();
 </script>
 </body>

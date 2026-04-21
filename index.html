@@ -227,7 +227,22 @@ let dragName=null, dragOverName=null, dragOverMode=null;
 // ★ ドラッグはハンドル(☰)のみから開始。tree-nodeのdraggableは使わない。
 
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function normDate(s){if(!s)return'';const d=s.trim();if(/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(d)){const p=d.split('/');return`${p[0]}-${p[1].padStart(2,'0')}-${p[2].padStart(2,'0')}`;}if(/^\d{8}$/.test(d))return`${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`;return d;}
+// 任意フォーマット → YYYY/MM/DD 表示用
+function toDisplay(s){
+  if(!s)return'';
+  const d=s.trim();
+  // 20220610 → 2022/06/10
+  if(/^\d{8}$/.test(d))return`${d.slice(0,4)}/${d.slice(4,6)}/${d.slice(6,8)}`;
+  // 2022-06-10 → 2022/06/10
+  if(/^\d{4}-\d{2}-\d{2}$/.test(d))return d.replace(/-/g,'/');
+  // 2022/6/10 → 2022/06/10
+  if(/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(d)){const p=d.split('/');return`${p[0]}/${p[1].padStart(2,'0')}/${p[2].padStart(2,'0')}`;}
+  return d;
+}
+// YYYY/MM/DD → YYYY-MM-DD (input[type=date]用)
+function toInputDate(s){return toDisplay(s).replace(/\//g,'-');}
+// フィルター比較用 YYYY-MM
+function normDate(s){return toInputDate(s).substring(0,7);}
 function normMaker(s){if(!s)return'';const t=s.trim().toUpperCase();if(t.startsWith('LENOVO'))return'Lenovo';if(t.startsWith('DELL'))return'DELL';if(t.startsWith('HP'))return'HP';if(t.includes('マウス')||t.includes('MOUSE'))return'マウスコンピュータ';return s.trim();}
 function showInd(state,msg){const el=document.getElementById('save-ind');el.className='save-ind '+state;el.textContent=msg||'';if(state==='saved')setTimeout(()=>{el.textContent='';el.className='save-ind';},3000);}
 function v(id){const el=document.getElementById(id);return el?el.value:'';}
@@ -462,17 +477,17 @@ function render(){
         <div class="di"><label>メールアドレス</label><span>${esc(r['メールアドレス'])||'—'}</span></div>
         <div class="di"><label>部署</label><span>${esc(r['部署'])||'—'}</span></div>
         <div class="di"><label>管理者のタスク</label><span>${esc(r['管理者のタスク'])||'—'}</span></div>
-        <div class="di"><label>利用開始日</label><span>${esc(r['利用開始日'])||'—'}</span></div>
-        <div class="di"><label>利用終了日</label><span>${esc(r['利用終了日'])||'—'}</span></div>
+        <div class="di"><label>利用開始日</label><span>${toDisplay(r['利用開始日'])||'—'}</span></div>
+        <div class="di"><label>利用終了日</label><span>${toDisplay(r['利用終了日'])||'—'}</span></div>
         <div class="di"><label>ハードウェア割当</label><span>${esc(r['ハードウェア割当'])||'—'}</span></div>
         <div class="di"><label>管理グループ</label><span>${esc(r['管理グループ'])||'—'}</span></div>
         <div class="di"><label>管理者(メールアドレス)</label><span>${esc(r['管理者(メールアドレス)'])||'—'}</span></div>
         <div class="di"><label>調達方法</label><span>${esc(r['調達方法'])||'—'}</span></div>
         <div class="di"><label>支払い周期</label><span>${esc(r['支払い周期'])||'—'}</span></div>
         <div class="di"><label>購入/利用料金</label><span>${esc(r['購入/利用料金'])||'—'} ${esc(r['通貨'])||''}</span></div>
-        <div class="di"><label>購入/契約開始日</label><span>${esc(r['購入/契約開始日'])||'—'}</span></div>
-        <div class="di"><label>廃棄日/解約日</label><span>${esc(r['廃棄日/解約日'])||'—'}</span></div>
-        <div class="di"><label>契約更新日</label><span>${esc(r['契約更新日'])||'—'}</span></div>
+        <div class="di"><label>購入/契約開始日</label><span>${toDisplay(r['購入/契約開始日'])||'—'}</span></div>
+        <div class="di"><label>廃棄日/解約日</label><span>${toDisplay(r['廃棄日/解約日'])||'—'}</span></div>
+        <div class="di"><label>契約更新日</label><span>${toDisplay(r['契約更新日'])||'—'}</span></div>
         <div class="di"><label>メーカー</label><span>${esc(r['メーカー'])||'—'}</span></div>
         <div class="di"><label>Officeアカウント</label><span>${esc(r['Officeアカウント'])||'—'}</span></div>
         <div class="di"><label>Officeパス</label><span>${esc(r['Officeパス'])||'—'}</span></div>
@@ -480,7 +495,7 @@ function render(){
         <div class="di"><label>Microsoftパス</label><span>${esc(r['Microsoftパス'])||'—'}</span></div>
         <div class="di"><label>PIN</label><span>${esc(r['PIN'])||'—'}</span></div>
         <div class="di"><label>Office助成金</label><span>${esc(r['Office助成金'])||'—'}</span></div>
-        <div class="di"><label>Office追加日</label><span>${esc(r['Office追加日'])||'—'}</span></div>
+        <div class="di"><label>Office追加日</label><span>${toDisplay(r['Office追加日'])||'—'}</span></div>
         <div class="di" style="grid-column:1/-1"><label>メモ</label><span>${esc(r['メモ'])||'—'}</span></div>
       </div>
       <div style="display:flex;gap:8px">
@@ -497,7 +512,7 @@ function render(){
       <td>${esc((r['ユーザー']||'—').substring(0,20))}</td>
       <td style="font-size:12px">${esc(r['部署'])||'—'}</td>
       <td>${taskBadge}</td>
-      <td style="font-size:12px">${esc(r['利用開始日'])||'—'}</td>
+      <td style="font-size:12px">${toDisplay(r['利用開始日'])||'—'}</td>
       <td style="font-size:12px">${esc(r._makerNorm)||'—'}</td>
       <td onclick="event.stopPropagation()"><button class="btn btn-sm" onclick="openEdit(${r._id})">編集</button></td>
     </tr>${detail}`;
@@ -529,17 +544,17 @@ const FIELDS=[
   {sec:'利用者情報'},
   {k:'ユーザー'},{k:'メールアドレス',full:true},
   {k:'部署',type:'select_dept'},
-  {k:'利用開始日'},{k:'利用終了日'},
+  {k:'利用開始日',type:'date'},{k:'利用終了日',type:'date'},
   {sec:'管理者'},
   {k:'管理者(メールアドレス)',full:true},
   {sec:'調達・費用'},
   {k:'調達方法',type:'select_dynamic',opt:'proc'},
   {k:'支払い周期'},{k:'購入/利用料金'},{k:'通貨'},
-  {k:'購入/契約開始日'},{k:'廃棄日/解約日'},{k:'契約更新日'},
+  {k:'購入/契約開始日',type:'date'},{k:'廃棄日/解約日',type:'date'},{k:'契約更新日',type:'date'},
   {sec:'アカウント情報'},
   {k:'Officeアカウント',full:true},{k:'Officeパス'},
   {k:'Microsoftアカウント',full:true},{k:'Microsoftパス'},
-  {k:'PIN'},{k:'Office助成金',type:'select',opts:['','◯','ー']},{k:'Office追加日'},
+  {k:'PIN'},{k:'Office助成金',type:'select',opts:['','◯','ー']},{k:'Office追加日',type:'date'},
   {sec:'その他'},
   {k:'メモ',type:'textarea',full:true},
 ];
@@ -559,6 +574,7 @@ function showModal(r,isNew){
     else if(f.type==='select_dynamic'){const opts=f.opt==='task'?taskOptions:procOptions;input=`<select id="fm-${esc(f.k)}"><option value="">未設定</option>${opts.map(o=>`<option value="${esc(o)}"${r[f.k]===o?' selected':''}>${esc(o)}</option>`).join('')}</select>`;}
     else if(f.type==='select_dept')input=`<select id="fm-${esc(f.k)}"><option value="">未設定</option>${deptOpts.map(({value,label})=>`<option value="${esc(value)}"${r[f.k]===value?' selected':''}>${esc(label)}</option>`).join('')}</select>`;
     else if(f.type==='textarea')input=`<textarea id="fm-${esc(f.k)}">${val}</textarea>`;
+    else if(f.type==='date')input=`<input type="date" id="fm-${esc(f.k)}" value="${esc(toInputDate(r[f.k]||''))}">`;
     else input=`<input id="fm-${esc(f.k)}" value="${val}">`;
     return`<div class="${cls}"><label>${esc(f.k)}</label>${input}</div>`;
   }).join('');
@@ -577,7 +593,13 @@ function onOverlayClick(e){if(e.target===document.getElementById('modal-overlay'
 
 async function saveRecord(id,isNew){
   const rec={_id:id};
-  FIELDS.filter(f=>f.k).forEach(f=>{const el=document.getElementById('fm-'+f.k);rec[f.k]=el?el.value:'';});
+  FIELDS.filter(f=>f.k).forEach(f=>{
+    const el=document.getElementById('fm-'+f.k);
+    let val=el?el.value:'';
+    // date入力(YYYY-MM-DD)をYYYY/MM/DDに変換して保存
+    if(f.type==='date'&&val&&/^\d{4}-\d{2}-\d{2}$/.test(val))val=val.replace(/-/g,'/');
+    rec[f.k]=val;
+  });
   rec._makerNorm=normMaker(rec['メーカー']);
   if(isNew)pcData.push(rec);
   else{const i=pcData.findIndex(x=>x._id===id);if(i>=0)pcData[i]=rec;}

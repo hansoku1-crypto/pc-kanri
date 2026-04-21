@@ -16,7 +16,27 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
 .tab.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
 .nav-right{margin-left:auto;display:flex;gap:8px;align-items:center}
 
-.filter-card{background:#fff;border:0.5px solid #e0e0da;border-radius:12px;padding:1rem;margin-bottom:1rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;align-items:end}
+.filter-card{background:#fff;border:0.5px solid #e0e0da;border-radius:12px;padding:1rem;margin-bottom:1rem}
+.filter-row1{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.filter-row2{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding-top:8px;border-top:0.5px solid #eee}
+.filter-search{flex:1;min-width:200px;max-width:320px;font-size:13px;border:0.5px solid #d0d0ca;border-radius:6px;padding:5px 8px;outline:none}
+.filter-search:focus{border-color:#666}
+.ff{display:flex;flex-direction:column;gap:3px}
+.ff label{font-size:11px;color:#888}
+.ff input,.ff select{font-size:13px;border:0.5px solid #d0d0ca;border-radius:6px;padding:5px 8px;background:#fff;color:#1a1a1a;outline:none;width:100%}
+.ff input:focus,.ff select:focus{border-color:#666}
+.filter-btn{font-size:12px;padding:5px 12px;border:0.5px solid #d0d0ca;border-radius:6px;background:#fff;cursor:pointer;color:#1a1a1a;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+.filter-btn:hover{background:#f5f5f3}
+.filter-btn.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.filter-btn .filter-val{font-size:11px;opacity:.8}
+.date-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:300;align-items:center;justify-content:center}
+.date-modal-bg.open{display:flex}
+.date-modal{background:#fff;border-radius:12px;padding:1.5rem;width:min(480px,96vw);border:0.5px solid #e0e0da}
+.date-modal h3{font-size:15px;font-weight:600;margin-bottom:1rem}
+.date-range-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.date-range-row input{flex:1;min-width:120px;font-size:13px;border:0.5px solid #d0d0ca;border-radius:6px;padding:6px 8px;outline:none}
+.date-range-sep{color:#aaa;font-size:13px}
+.date-modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:1rem;padding-top:1rem;border-top:0.5px solid #eee}
 .ff{display:flex;flex-direction:column;gap:3px}
 .ff label{font-size:11px;color:#888}
 .ff input,.ff select{font-size:13px;border:0.5px solid #d0d0ca;border-radius:6px;padding:5px 8px;background:#fff;color:#1a1a1a;outline:none;width:100%}
@@ -130,28 +150,55 @@ tr:hover td{background:#fafafa}
   <!-- ハードウェア一覧 -->
   <div id="tab-list">
     <div class="filter-card">
-      <div class="ff"><label>フリーワード</label><input type="text" id="f-word" placeholder="シリアル番号・ID・ユーザー..." oninput="render()"></div>
-      <div class="ff"><label>ステータス</label>
-        <select id="f-status" onchange="render()">
-          <option value="">すべて</option>
+      <div class="filter-row1">
+        <input type="text" class="filter-search" id="f-word" placeholder="シリアル番号・ID・ユーザー..." oninput="render()">
+        <select id="f-status" class="filter-btn" onchange="render()" style="min-width:110px">
+          <option value="">ステータス: すべて</option>
           <option>利用中</option><option>利用予定</option><option>在庫</option>
           <option>準備中</option><option>廃棄・解約</option><option>所在不明</option>
         </select>
+        <select id="f-dept" class="filter-btn" onchange="render()" style="min-width:110px"><option value="">部署: すべて</option></select>
+        <select id="f-task" class="filter-btn" onchange="render()" style="min-width:120px"><option value="">管理者のタスク: すべて</option></select>
+        <select id="f-procurement" class="filter-btn" onchange="render()" style="min-width:110px"><option value="">調達方法: すべて</option></select>
+        <select id="f-maker" class="filter-btn" onchange="render()" style="min-width:110px"><option value="">メーカー: すべて</option></select>
       </div>
-      <div class="ff"><label>部署</label><select id="f-dept" onchange="render()"><option value="">すべて</option></select></div>
-      <div class="ff"><label>管理者のタスク</label><select id="f-task" onchange="render()"><option value="">すべて</option></select></div>
-      <div class="ff"><label>調達方法</label><select id="f-procurement" onchange="render()"><option value="">すべて</option></select></div>
-      <div class="ff"><label>メーカー</label><select id="f-maker" onchange="render()"><option value="">すべて</option></select></div>
-      <div class="ff"><label>利用開始日（から）</label><input type="month" id="f-start-from" oninput="render()"></div>
-      <div class="ff"><label>利用開始日（まで）</label><input type="month" id="f-start-to" oninput="render()"></div>
-      <div class="ff"><label>購入/契約開始日（から）</label><input type="month" id="f-buy-from" oninput="render()"></div>
-      <div class="ff"><label>契約更新日（まで）</label><input type="month" id="f-renew-to" oninput="render()"></div>
-      <div class="filter-actions">
+      <div class="filter-row2">
+        <button class="filter-btn" id="btn-start" onclick="openDateModal('start')">
+          利用開始日 <span class="filter-val" id="lbl-start"></span>
+        </button>
+        <button class="filter-btn" id="btn-buy" onclick="openDateModal('buy')">
+          購入/契約開始日 <span class="filter-val" id="lbl-buy"></span>
+        </button>
+        <button class="filter-btn" id="btn-renew" onclick="openDateModal('renew')">
+          契約更新日 <span class="filter-val" id="lbl-renew"></span>
+        </button>
         <button class="btn" onclick="resetFilters()">リセット</button>
         <button class="btn btn-primary" onclick="openAdd()">＋ 新規登録</button>
         <span class="rc" id="result-count"></span>
       </div>
     </div>
+
+    <!-- 日付モーダル -->
+    <div class="date-modal-bg" id="date-modal-bg" onclick="closeDateModal(event)">
+      <div class="date-modal">
+        <h3 id="date-modal-title">利用開始日で絞り込み</h3>
+        <div class="date-range-row">
+          <input type="date" id="dm-from" placeholder="開始日">
+          <span class="date-range-sep">〜</span>
+          <input type="date" id="dm-to" placeholder="終了日">
+        </div>
+        <div class="date-modal-actions">
+          <button class="btn" onclick="clearDateFilter()">クリア</button>
+          <button class="btn" onclick="document.getElementById('date-modal-bg').classList.remove('open')">キャンセル</button>
+          <button class="btn btn-primary" onclick="applyDateFilter()">絞り込み結果を表示</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 非表示の日付値保持 -->
+    <input type="hidden" id="f-start-from"><input type="hidden" id="f-start-to">
+    <input type="hidden" id="f-buy-from"><input type="hidden" id="f-buy-to">
+    <input type="hidden" id="f-renew-from"><input type="hidden" id="f-renew-to">
     <div class="stats" id="stats"></div>
     <div class="tbl-wrap">
       <table>
@@ -280,6 +327,60 @@ async function savePC(){
     if(res.error)throw new Error(res.error);
     showInd('saved',`保存済み ✓ (${res.saved}件)`);
   }catch(e){showInd('error','保存エラー: '+e.message);}
+}
+
+// ── 日付フィルターモーダル ──
+let currentDateTarget = 'start';
+const DATE_MODAL_CONFIG = {
+  start: { title:'利用開始日で絞り込み', from:'f-start-from', to:'f-start-to', btn:'btn-start', lbl:'lbl-start' },
+  buy:   { title:'購入/契約開始日で絞り込み', from:'f-buy-from', to:'f-buy-to', btn:'btn-buy', lbl:'lbl-buy' },
+  renew: { title:'契約更新日で絞り込み', from:'f-renew-from', to:'f-renew-to', btn:'btn-renew', lbl:'lbl-renew' },
+};
+
+function openDateModal(target){
+  currentDateTarget = target;
+  const cfg = DATE_MODAL_CONFIG[target];
+  document.getElementById('date-modal-title').textContent = cfg.title;
+  document.getElementById('dm-from').value = document.getElementById(cfg.from).value || '';
+  document.getElementById('dm-to').value   = document.getElementById(cfg.to).value   || '';
+  document.getElementById('date-modal-bg').classList.add('open');
+}
+
+function closeDateModal(e){
+  if(e.target === document.getElementById('date-modal-bg'))
+    document.getElementById('date-modal-bg').classList.remove('open');
+}
+
+function applyDateFilter(){
+  const cfg = DATE_MODAL_CONFIG[currentDateTarget];
+  const from = document.getElementById('dm-from').value;
+  const to   = document.getElementById('dm-to').value;
+  document.getElementById(cfg.from).value = from;
+  document.getElementById(cfg.to).value   = to;
+  // ボタンのラベル更新
+  const lbl = document.getElementById(cfg.lbl);
+  const btn = document.getElementById(cfg.btn);
+  if(from || to){
+    lbl.textContent = (from ? from.substring(0,7) : '〜') + (to ? '〜'+to.substring(0,7) : '');
+    btn.classList.add('active');
+  } else {
+    lbl.textContent = '';
+    btn.classList.remove('active');
+  }
+  document.getElementById('date-modal-bg').classList.remove('open');
+  render();
+}
+
+function clearDateFilter(){
+  const cfg = DATE_MODAL_CONFIG[currentDateTarget];
+  document.getElementById('dm-from').value = '';
+  document.getElementById('dm-to').value   = '';
+  document.getElementById(cfg.from).value  = '';
+  document.getElementById(cfg.to).value    = '';
+  document.getElementById(cfg.lbl).textContent = '';
+  document.getElementById(cfg.btn).classList.remove('active');
+  document.getElementById('date-modal-bg').classList.remove('open');
+  render();
 }
 
 // ── 部署マスタ ──
@@ -433,13 +534,19 @@ function initFilters(){
   });
 }
 function fillSelect(id,opts){const el=document.getElementById(id);const cur=el.value;while(el.options.length>1)el.remove(1);opts.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;if(v===cur)o.selected=true;el.appendChild(o);});}
-function resetFilters(){['f-word','f-start-from','f-start-to','f-buy-from','f-renew-to'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});['f-status','f-dept','f-task','f-procurement','f-maker'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});render();}
+function resetFilters(){
+  ['f-word','f-start-from','f-start-to','f-buy-from','f-buy-to','f-renew-from','f-renew-to'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['f-status','f-dept','f-task','f-procurement','f-maker'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['btn-start','btn-buy','btn-renew'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active');});
+  ['lbl-start','lbl-buy','lbl-renew'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='';});
+  render();
+}
 
 // ── ソート・フィルター ──
 function setSort(k){if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=-1;}render();}
 function getFiltered(){
   const q=v('f-word').toLowerCase(),st=v('f-status'),dp=v('f-dept'),tk=v('f-task'),pr=v('f-procurement'),mk=v('f-maker');
-  const sf=v('f-start-from'),st2=v('f-start-to'),bf=v('f-buy-from'),rt=v('f-renew-to');
+  const sf=v('f-start-from'),st2=v('f-start-to'),bf=v('f-buy-from'),bt=v('f-buy-to'),rf=v('f-renew-from'),rt=v('f-renew-to');
   return pcData.filter(r=>{
     if(q&&!((['シリアル番号','ID(PC名)','ユーザー','メールアドレス','メーカー','部署','メモ'].map(k=>r[k]||'').join('')).toLowerCase().includes(q)))return false;
     if(st&&r['ステータス']!==st)return false;
@@ -447,9 +554,9 @@ function getFiltered(){
     if(tk&&r['管理者のタスク']!==tk)return false;
     if(pr&&r['調達方法']!==pr)return false;
     if(mk&&r._makerNorm!==mk)return false;
-    if(sf||st2){const ym=normDate(r['利用開始日']).substring(0,7);if(sf&&ym&&ym<sf)return false;if(st2&&ym&&ym>st2)return false;}
-    if(bf){const ym=normDate(r['購入/契約開始日']).substring(0,7);if(ym&&ym<bf)return false;}
-    if(rt){const ym=normDate(r['契約更新日']).substring(0,7);if(ym&&ym>rt)return false;}
+    if(sf||st2){const ym=toInputDate(r['利用開始日']).substring(0,7);if(sf&&ym&&ym<sf.substring(0,7))return false;if(st2&&ym&&ym>st2.substring(0,7))return false;}
+    if(bf||bt){const ym=toInputDate(r['購入/契約開始日']).substring(0,7);if(bf&&ym&&ym<bf.substring(0,7))return false;if(bt&&ym&&ym>bt.substring(0,7))return false;}
+    if(rf||rt){const ym=toInputDate(r['契約更新日']).substring(0,7);if(rf&&ym&&ym<rf.substring(0,7))return false;if(rt&&ym&&ym>rt.substring(0,7))return false;}
     return true;
   }).sort((a,b)=>{const va=a[sortKey]||'',vb=b[sortKey]||'';return va<vb?-sortDir:va>vb?sortDir:0;});
 }

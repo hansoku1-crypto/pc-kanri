@@ -327,7 +327,12 @@ function showTab(name){
   document.querySelectorAll('.tab').forEach((el,i)=>{el.classList.toggle('active',['list','dept','pos'][i]===name);});
 }
 
-async function gasGet(action){const res=await fetch(GAS_URL+'?action='+action);return res.json();}
+async function gasGet(action){
+  // ブラウザキャッシュを無効化するためタイムスタンプを付与
+  const url = GAS_URL + '?action=' + action + '&t=' + Date.now();
+  const res = await fetch(url, { cache: 'no-store' });
+  return res.json();
+}
 async function gasPost(action, data) {
   const res = await fetch(GAS_URL, {
     method: 'POST',

@@ -301,7 +301,25 @@ function toInputDate(s){return toDisplay(s).replace(/\//g,'-');}
 // フィルター比較用 YYYY-MM
 function normDate(s){return toInputDate(s).substring(0,7);}
 function normMaker(s){if(!s)return'';const t=s.trim().toUpperCase();if(t.startsWith('LENOVO'))return'Lenovo';if(t.startsWith('DELL'))return'DELL';if(t.startsWith('HP'))return'HP';if(t.includes('マウス')||t.includes('MOUSE'))return'マウスコンピュータ';return s.trim();}
-function showInd(state,msg){const el=document.getElementById('save-ind');el.className='save-ind '+state;el.textContent=msg||'';if(state==='saved')setTimeout(()=>{el.textContent='';el.className='save-ind';},3000);}
+function showInd(state,msg){
+  const el=document.getElementById('save-ind');
+  el.className='save-ind '+state;
+  el.textContent=msg||'';
+  // 保存中は再読み込みボタンを無効化
+  const reloadBtn=document.querySelector('.nav-right .btn');
+  if(reloadBtn){
+    if(state==='saving'){
+      reloadBtn.disabled=true;
+      reloadBtn.style.opacity='0.4';
+      reloadBtn.style.cursor='not-allowed';
+    } else {
+      reloadBtn.disabled=false;
+      reloadBtn.style.opacity='';
+      reloadBtn.style.cursor='';
+    }
+  }
+  if(state==='saved')setTimeout(()=>{el.textContent='';el.className='save-ind';},3000);
+}
 function v(id){const el=document.getElementById(id);return el?el.value:'';}
 
 function showTab(name){
@@ -343,7 +361,27 @@ async function savePC(){
     const res=await gasPost('saveAll',payload);
     if(res.error)throw new Error(res.error);
     showInd('saved',`保存済み ✓ (${res.saved}件)`);
+    // 保存完了後にスプレッドシートから最新データを再取得して画面を更新
+    await reloadFromSheet();
   }catch(e){showInd('error','保存エラー: '+e.message);}
+}
+
+// スプレッドシートから最新データを取得して画面を更新（再読み込みボタンとは別）
+async function reloadFromSheet(){
+  try{
+    const [pc,dept,pos]=await Promise.all([gasGet('getAll'),gasGet('getDepts'),gasGet('getPositions')]);
+    if(pc.error)return; // エラー時はスキップ（既存データを維持）
+    pcData=(Array.isArray(pc)?pc:[]).map((r,i)=>({_id:i,...r,_makerNorm:normMaker(r['メーカー'])}));
+    depts=Array.isArray(dept)?dept:[];
+    positions=Array.isArray(pos)?pos:[];
+    const allTasks=new Set([...DEFAULT_TASKS,...pcData.map(r=>r['管理者のタスク']).filter(Boolean)]);
+    const allProc=new Set([...DEFAULT_PROCUREMENT,...pcData.map(r=>r['調達方法']).filter(Boolean)]);
+    taskOptions=[...allTasks]; procOptions=[...allProc];
+    initFilters(); render();
+  }catch(e){
+    // 再取得失敗は無視（保存は成功しているので問題なし）
+    console.error('再取得エラー:', e);
+  }
 }
 
 // ── 日付フィルターモーダル ──

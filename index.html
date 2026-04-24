@@ -371,7 +371,15 @@ async function reloadFromSheet(){
   try{
     const [pc,dept,pos]=await Promise.all([gasGet('getAll'),gasGet('getDepts'),gasGet('getPositions')]);
     if(pc.error)return; // エラー時はスキップ（既存データを維持）
-    pcData=(Array.isArray(pc)?pc:[]).map((r,i)=>({_id:i,...r,_makerNorm:normMaker(r['メーカー'])}));
+    // ★ 既存の_idをシリアル番号で引き継ぐ（IDが変わると編集対象がずれる問題を防ぐ）
+    const existIdMap={};
+    pcData.forEach(r=>{ if(r['シリアル番号']) existIdMap[r['シリアル番号']]=r._id; });
+    let nextId=Date.now();
+    pcData=(Array.isArray(pc)?pc:[]).map(r=>{
+      const serial=r['シリアル番号']||'';
+      const id=existIdMap[serial]!==undefined ? existIdMap[serial] : nextId++;
+      return {_id:id,...r,_makerNorm:normMaker(r['メーカー'])};
+    });
     depts=Array.isArray(dept)?dept:[];
     positions=Array.isArray(pos)?pos:[];
     const allTasks=new Set([...DEFAULT_TASKS,...pcData.map(r=>r['管理者のタスク']).filter(Boolean)]);

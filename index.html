@@ -361,8 +361,8 @@ async function savePC(){
     const res=await gasPost('saveAll',payload);
     if(res.error)throw new Error(res.error);
     showInd('saved',`保存済み ✓ (${res.saved}件)`);
-    // 保存完了後にスプレッドシートから最新データを再取得して画面を更新
-    await reloadFromSheet();
+    // ★ 保存成功後はメモリ上のpcDataをそのまま使う（再取得しない）
+    // 手動で「↺ 再読み込み」を押したときだけスプレッドシートから取得する
   }catch(e){showInd('error','保存エラー: '+e.message);}
 }
 

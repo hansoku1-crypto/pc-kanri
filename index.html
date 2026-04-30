@@ -34,14 +34,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
 .stat-label{font-size:12px;color:#666}
 .stat-val{font-size:16px;font-weight:700;margin-left:2px}
 .tbl-wrap{overflow-x:auto;border:0.5px solid #e0e0da;border-radius:12px;background:#fff;margin-bottom:1rem}
-table{width:100%;border-collapse:collapse;font-size:13px}
+table{width:max-content;min-width:100%;border-collapse:collapse;font-size:13px}
 th{background:#f8f8f6;padding:8px 10px;text-align:left;font-weight:500;font-size:11px;color:#888;white-space:nowrap;border-bottom:0.5px solid #e0e0da;cursor:pointer;user-select:none}
 th:hover{color:#1a1a1a}
-td{padding:8px 10px;border-bottom:0.5px solid #f0f0ea;vertical-align:middle;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis}
+td{padding:8px 10px;border-bottom:0.5px solid #f0f0ea;vertical-align:middle;white-space:nowrap;min-width:80px}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:#fafafa}
-.row-detail td{padding:12px 16px;white-space:normal;background:#fafafa;border-bottom:0.5px solid #e8e8e4}
-.detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px 24px;margin-bottom:12px}
+.row-detail td{padding:0;background:#fafafa;border-bottom:0.5px solid #e8e8e4}
+.row-detail-inner{padding:12px 16px;overflow-x:auto}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px 24px;margin-bottom:12px;min-width:600px}
 .di label{font-size:11px;color:#888;display:block;margin-bottom:2px}
 .di span{font-size:13px;word-break:break-all}
 .badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 8px;border-radius:10px;white-space:nowrap;font-weight:500}
@@ -369,14 +370,14 @@ function render(){
       if(DATE_FIELDS.includes(h))return`<td style="font-size:12px">${esc(toDisplay(r[h]))||'—'}</td>`;
       return`<td>${esc((r[h]||'—').toString().substring(0,30))}</td>`;
     }).join('');
-    const detail=expanded.has(r._id)?`<tr class="row-detail"><td colspan="${displayCols.length+2}">
+    const detail=expanded.has(r._id)?`<tr class="row-detail"><td colspan="${displayCols.length+2}"><div class="row-detail-inner">
       <div class="detail-grid">${headers.map(h=>`<div class="di"><label>${esc(h)}</label><span>${DATE_FIELDS.includes(h)?esc(toDisplay(r[h])):esc(r[h])||'—'}</span></div>`).join('')}</div>
       <div style="display:flex;gap:8px">
         <button class="btn btn-sm" onclick="openEdit(${r._id});event.stopPropagation()">編集</button>
         <button class="btn btn-sm btn-danger" onclick="confirmDelete(${r._id});event.stopPropagation()">削除</button>
         <button class="btn btn-sm" onclick="toggleRow(${r._id});event.stopPropagation()">閉じる</button>
       </div>
-    </td></tr>`:'';
+    </div></td></tr>`:'';
     return`<tr onclick="toggleRow(${r._id})" style="cursor:pointer"><td style="text-align:center;color:#aaa">${expanded.has(r._id)?'▾':'▸'}</td>${cells}<td onclick="event.stopPropagation()"><button class="btn btn-sm" onclick="openEdit(${r._id})">編集</button></td></tr>${detail}`;
   }).join('');
 }

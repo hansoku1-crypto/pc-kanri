@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ソフトウェア管理ツール</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;background:#f5f5f3;color:#1a1a1a}
+#app{max-width:1400px;margin:0 auto;padding:1rem}
+
+/* ナビ */
+.nav{display:flex;gap:8px;margin-bottom:1rem;border-bottom:1px solid #e0e0da;padding-bottom:.75rem;align-items:center;flex-wrap:wrap}
+.nav h1{font-size:16px;font-weight:700;margin-right:4px}
+.main-tab{font-size:13px;padding:5px 14px;border:0.5px solid #d0d0ca;border-radius:20px;background:#fff;cursor:pointer;color:#555;white-space:nowrap}
+.main-tab:hover{background:#f0f0ea}
+.main-tab.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.nav-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.save-ind{font-size:12px;color:#888}
+.save-ind.saving{color:#d4800a}
+.save-ind.saved{color:#3B6D11}
+.save-ind.error{color:#c0392b}
+
+/* ボタン */
+.btn{font-size:12px;padding:5px 12px;border:0.5px solid #d0d0ca;border-radius:6px;background:#fff;cursor:pointer;color:#1a1a1a;white-space:nowrap}
+.btn:hover{background:#f5f5f3}
+.btn-primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.btn-primary:hover{background:#333}
+.btn-danger{color:#c0392b;border-color:#e0a0a0}
+.btn-danger:hover{background:#fdf0f0}
+.btn-sm{font-size:11px;padding:3px 9px}
+
+/* フィルター */
+.filter-card{background:#fff;border:0.5px solid #e0e0da;border-radius:12px;padding:1rem;margin-bottom:1rem}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filter-search{flex:1;min-width:200px;max-width:360px;font-size:13px;border:0.5px solid #d0d0ca;border-radius:6px;padding:5px 8px;outline:none}
+.filter-sel{font-size:12px;padding:5px 10px;border:0.5px solid #d0d0ca;border-radius:6px;background:#fff;cursor:pointer;color:#1a1a1a;outline:none}
+.filter-btn{font-size:12px;padding:5px 12px;border:0.5px solid #d0d0ca;border-radius:6px;background:#fff;cursor:pointer;color:#1a1a1a;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+.filter-btn:hover{background:#f5f5f3}
+.filter-btn.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.filter-val{font-size:11px;opacity:.8}
+.rc{font-size:12px;color:#888;margin-left:auto}
+
+/* テーブル */
+.tbl-wrap{overflow:auto;border:0.5px solid #e0e0da;border-radius:12px;background:#fff;margin-bottom:1rem;max-height:calc(100vh - 280px)}
+table{width:max-content;min-width:100%;border-collapse:collapse;font-size:13px}
+th{position:sticky;top:0;z-index:10;background:#f8f8f6;padding:8px 12px;text-align:left;font-weight:500;font-size:11px;color:#888;white-space:nowrap;border-bottom:0.5px solid #e0e0da;cursor:pointer;user-select:none}
+th:hover{color:#1a1a1a}
+td{padding:8px 12px;border-bottom:0.5px solid #f0f0ea;vertical-align:middle;white-space:nowrap;min-width:80px}
+tr:last-child td{border-bottom:none}
+tr.sw-row:hover td{background:#f5f5f3;cursor:pointer}
+.sort-arrow{font-size:10px;margin-left:2px}
+.empty{padding:3rem;text-align:center;color:#888}
+
+/* バッジ */
+.badge{display:inline-flex;align-items:center;font-size:11px;padding:2px 8px;border-radius:10px;white-space:nowrap;font-weight:500}
+.badge-renewal{background:#FFF3E0;color:#E65100}
+.badge-genre{background:#E3F2FD;color:#1565C0}
+
+/* ソフトウェアアイコン */
+.sw-icon{width:28px;height:28px;border-radius:6px;background:#e0e0da;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;overflow:hidden}
+.sw-icon img{width:100%;height:100%;object-fit:cover}
+.sw-name-cell{display:flex;align-items:center;gap:8px}
+.sw-sub{font-size:11px;color:#aaa}
+
+/* マスタパネル */
+.master-panel{background:#fff;border:0.5px solid #e0e0da;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+.master-panel h3{font-size:14px;font-weight:600;margin-bottom:.75rem}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem}
+.master-list{display:flex;flex-direction:column;gap:4px;margin-bottom:.75rem;max-height:300px;overflow-y:auto}
+.master-item{display:flex;align-items:center;gap:8px;padding:6px 8px;background:#fafafa;border-radius:6px;border:0.5px solid #eee}
+.master-item span{flex:1;font-size:13px}
+.master-add{display:flex;gap:8px;margin-top:4px}
+.master-add input{flex:1;font-size:13px;border:0.5px solid #d0d0ca;border-radius:6px;padding:5px 8px;outline:none}
+
+/* モーダル */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;align-items:flex-start;justify-content:center;padding-top:40px;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:12px;padding:1.5rem;width:min(700px,96vw);margin-bottom:40px;border:0.5px solid #e0e0da}
+.modal h2{font-size:16px;font-weight:600;margin-bottom:1rem}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-field{display:flex;flex-direction:column;gap:4px}
+.form-field.full{grid-column:1/-1}
+.form-field label{font-size:12px;color:#888}
+.form-field input,.form-field select,.form-field textarea{font-size:13px;border:0.5px solid #d0d0ca;border-radius:6px;padding:6px 8px;background:#fff;color:#1a1a1a;outline:none;width:100%}
+.form-field textarea{resize:vertical;min-height:80px}
+.form-section{font-size:11px;font-weight:600;color:#888;letter-spacing:.05em;grid-column:1/-1;margin-top:8px;padding-top:8px;border-top:0.5px solid #eee}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem;padding-top:1rem;border-top:0.5px solid #eee}
+
+/* 日付モーダル */
+.date-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:300;align-items:center;justify-content:center}
+.date-modal-bg.open{display:flex}
+.date-modal{background:#fff;border-radius:12px;padding:1.5rem;width:min(480px,96vw);border:0.5px solid #e0e0da}
+.date-modal h3{font-size:15px;font-weight:600;margin-bottom:1rem}
+.date-range-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.date-range-row input{flex:1;min-width:120px;font-size:13px;border:0.5px solid #d0d0ca;border-radius:6px;padding:6px 8px;outline:none}
+.date-modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:1rem;padding-top:1rem;border-top:0.5px solid #eee}
+
+/* 個別ページ */
+.sw-detail{display:none}
+.sw-detail.open{display:block}
+.sw-header{display:flex;align-items:center;gap:12px;margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:0.5px solid #e0e0da}
+.sw-header-icon{width:48px;height:48px;border-radius:10px;background:#e0e0da;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;flex-shrink:0}
+.sw-header-info h2{font-size:18px;font-weight:700}
+.sw-header-info p{font-size:12px;color:#aaa;margin-top:2px}
+.sw-header-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.breadcrumb{font-size:12px;color:#aaa;margin-bottom:.5rem}
+.breadcrumb a{color:#aaa;text-decoration:none;cursor:pointer}
+.breadcrumb a:hover{color:#1a1a1a}
+
+/* タブ */
+.detail-tabs{display:flex;gap:0;border-bottom:1px solid #e0e0da;margin-bottom:1.25rem}
+.detail-tab{font-size:13px;padding:8px 16px;border:none;background:transparent;cursor:pointer;color:#888;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.detail-tab:hover{color:#1a1a1a}
+.detail-tab.active{color:#1a1a1a;font-weight:600;border-bottom-color:#1a1a1a}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* 利用状況サマリー */
+.usage-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:1rem}
+.usage-card{background:#fff;border:0.5px solid #e0e0da;border-radius:8px;padding:.75rem 1rem}
+.usage-label{font-size:11px;color:#888;margin-bottom:4px}
+.usage-val{font-size:20px;font-weight:700}
+.usage-sub{font-size:11px;color:#aaa;margin-top:2px}
+
+/* アカウントテーブル */
+.acc-tbl-wrap{overflow:auto;border:0.5px solid #e0e0da;border-radius:12px;background:#fff;max-height:calc(100vh - 420px)}
+.acc-tbl-wrap table{width:max-content;min-width:100%;border-collapse:collapse;font-size:13px}
+.acc-tbl-wrap th{position:sticky;top:0;z-index:10;background:#f8f8f6;padding:8px 12px;font-size:11px;font-weight:500;color:#888;border-bottom:0.5px solid #e0e0da;white-space:nowrap;cursor:pointer;user-select:none}
+.acc-tbl-wrap td{padding:8px 12px;border-bottom:0.5px solid #f0f0ea;white-space:nowrap;min-width:100px}
+.acc-tbl-wrap tr:last-child td{border-bottom:none}
+.acc-tbl-wrap tr:hover td{background:#fafafa}
+
+/* 契約情報 */
+.contract-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 32px;background:#fff;border:0.5px solid #e0e0da;border-radius:12px;padding:1.5rem}
+.contract-item label{font-size:11px;color:#888;display:block;margin-bottom:4px}
+.contract-item span{font-size:14px}
+
+/* メモ */
+.memo-box{background:#fff;border:0.5px solid #e0e0da;border-radius:12px;padding:1.25rem;min-height:200px;position:relative}
+.memo-text{font-size:14px;line-height:1.7;white-space:pre-wrap;color:#1a1a1a}
+.memo-edit-btn{position:absolute;top:1rem;right:1rem}
+
+/* ローディング */
+.loading{padding:3rem;text-align:center;color:#888}
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid #e0e0da;border-top-color:#888;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="nav">
+    <h1>ソフトウェア管理</h1>
+    <button class="main-tab active" onclick="showMainTab('list')">ソフトウェア</button>
+    <button class="main-tab" onclick="showMainTab('genre')">ジャンルマスタ</button>
+    <button class="main-tab" onclick="showMainTab('dept')">部署マスタ</button>
+    <div class="nav-right">
+      <button class="btn" onclick="reloadAll()" id="reload-btn">↺ 再読み込み</button>
+      <span class="save-ind" id="save-ind"></span>
+    </div>
+  </div>
+
+  <!-- ソフトウェア一覧 -->
+  <div id="tab-list">
+    <div class="filter-card">
+      <div class="filter-row">
+        <input type="text" class="filter-search" id="f-word" placeholder="ソフトウェア名で検索..." oninput="render()">
+        <select id="f-genre" class="filter-sel" onchange="render()"><option value="">ジャンル: すべて</option></select>
+        <select id="f-dept" class="filter-sel" onchange="render()"><option value="">管理部署: すべて</option></select>
+        <button class="filter-btn" id="btn-renew" onclick="openDateModal()">契約更新日 <span class="filter-val" id="lbl-renew"></span></button>
+        <button class="btn" onclick="resetFilters()">リセット</button>
+        <button class="btn btn-primary" onclick="openAddSw()">＋ ソフトウェアを追加</button>
+        <span class="rc" id="result-count"></span>
+      </div>
+    </div>
+    <input type="hidden" id="f-renew-from"><input type="hidden" id="f-renew-to">
+    <div class="tbl-wrap">
+      <table id="sw-table">
+        <thead><tr>
+          <th style="width:240px" onclick="setSort('ソフトウェア名')">ソフトウェア名/ワークスペース名<span class="sort-arrow" id="s-ソフトウェア名"></span></th>
+          <th onclick="setSort('契約プラン')">契約プラン<span class="sort-arrow" id="s-契約プラン"></span></th>
+          <th onclick="setSort('合計月額料金')">合計月額料金<span class="sort-arrow" id="s-合計月額料金"></span></th>
+          <th onclick="setSort('アカウント未利用率')">アカウント未利用率<span class="sort-arrow" id="s-アカウント未利用率"></span></th>
+          <th onclick="setSort('総アカウント数')">総アカウント数<span class="sort-arrow" id="s-総アカウント数"></span></th>
+          <th onclick="setSort('有償アカウント数')">有償アカウント数<span class="sort-arrow" id="s-有償アカウント数"></span></th>
+          <th onclick="setSort('無償アカウント数')">無償アカウント数<span class="sort-arrow" id="s-無償アカウント数"></span></th>
+          <th onclick="setSort('シャドーID数')">シャドーID数<span class="sort-arrow" id="s-シャドーID数"></span></th>
+          <th onclick="setSort('契約の種類')">契約の種類<span class="sort-arrow" id="s-契約の種類"></span></th>
+          <th onclick="setSort('支払いサイクル')">支払いサイクル<span class="sort-arrow" id="s-支払いサイクル"></span></th>
+          <th onclick="setSort('契約開始日')">契約開始日<span class="sort-arrow" id="s-契約開始日"></span></th>
+          <th onclick="setSort('契約更新日')">契約更新日<span class="sort-arrow" id="s-契約更新日"></span></th>
+          <th onclick="setSort('管理部署')">管理部署<span class="sort-arrow" id="s-管理部署"></span></th>
+          <th style="min-width:200px">メモ</th>
+          <th onclick="setSort('最終取得日時')">最終取得日時<span class="sort-arrow" id="s-最終取得日時"></span></th>
+          <th onclick="setSort('追加日時')">追加日時<span class="sort-arrow" id="s-追加日時"></span></th>
+          <th style="width:70px">操作</th>
+        </tr></thead>
+        <tbody id="sw-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ジャンルマスタ -->
+  <div id="tab-genre" style="display:none">
+    <div class="master-panel">
+      <div class="section-header"><h3>ジャンルマスタ</h3><button class="btn btn-primary btn-sm" onclick="saveGenres()">スプレッドシートに保存</button></div>
+      <div class="master-list" id="genre-list"></div>
+      <div class="master-add"><input type="text" id="genre-new" placeholder="新しいジャンル名を入力..."><button class="btn" onclick="addGenre()">追加</button></div>
+    </div>
+  </div>
+
+  <!-- 部署マスタ -->
+  <div id="tab-dept" style="display:none">
+    <div class="master-panel">
+      <div class="section-header"><h3>部署マスタ</h3><button class="btn btn-primary btn-sm" onclick="saveDepts()">スプレッドシートに保存</button></div>
+      <div class="master-list" id="dept-list"></div>
+      <div class="master-add"><input type="text" id="dept-new" placeholder="新しい部署名を入力..."><button class="btn" onclick="addDept()">追加</button></div>
+    </div>
+  </div>
+
+  <!-- ソフトウェア個別ページ -->
+  <div id="sw-detail" class="sw-detail">
+    <div class="breadcrumb"><a onclick="backToList()">ソフトウェア管理</a> › <span id="detail-breadcrumb"></span></div>
+    <div class="sw-header">
+      <div class="sw-header-icon" id="detail-icon"></div>
+      <div class="sw-header-info">
+        <h2 id="detail-name"></h2>
+        <p id="detail-genre"></p>
+      </div>
+      <div class="sw-header-right">
+        <button class="btn" onclick="editCurrentSw()">✏ 編集</button>
+      </div>
+    </div>
+    <div class="detail-tabs">
+      <button class="detail-tab active" onclick="showDetailTab('usage')">利用状況</button>
+      <button class="detail-tab" onclick="showDetailTab('contract')">契約情報</button>
+      <button class="detail-tab" onclick="showDetailTab('memo')">メモ</button>
+    </div>
+
+    <!-- 利用状況タブ -->
+    <div id="dtab-usage" class="tab-content active">
+      <div class="usage-summary" id="usage-summary"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
+        <div style="display:flex;gap:8px">
+          <input type="text" class="filter-search" id="acc-word" placeholder="メールアドレス・名前で検索..." oninput="renderAccounts()" style="max-width:280px">
+          <select id="acc-task" class="filter-sel" onchange="renderAccounts()"><option value="">管理者のタスク: すべて</option></select>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openAddAccount()">＋ アカウントを追加</button>
+      </div>
+      <div class="acc-tbl-wrap">
+        <table>
+          <thead><tr>
+            <th onclick="setAccSort('メンバーのメールアドレス')">メールアドレス<span class="sort-arrow"></span></th>
+            <th onclick="setAccSort('メンバー名')">メンバー名<span class="sort-arrow"></span></th>
+            <th onclick="setAccSort('管理者のタスク')">管理者のタスク<span class="sort-arrow"></span></th>
+            <th onclick="setAccSort('アカウント管理')">アカウント管理<span class="sort-arrow"></span></th>
+            <th onclick="setAccSort('アカウント')">アカウント<span class="sort-arrow"></span></th>
+            <th onclick="setAccSort('ライセンス')">ライセンス<span class="sort-arrow"></span></th>
+            <th onclick="setAccSort('利用状況アンケート')">利用状況アンケート<span class="sort-arrow"></span></th>
+            <th onclick="setAccSort('最近のアカウント利用')">最近のアカウント利用<span class="sort-arrow"></span></th>
+            <th onclick="setAccSort('利用開始日')">利用開始日<span class="sort-arrow"></span></th>
+            <th onclick="setAccSort('利用終了日')">利用終了日<span class="sort-arrow"></span></th>
+            <th onclick="setAccSort('アカウント作成日時')">アカウント作成日時<span class="sort-arrow"></span></th>
+            <th onclick="setAccSort('アカウント削除日時')">アカウント削除日時<span class="sort-arrow"></span></th>
+            <th style="min-width:160px">アカウントメモ</th>
+            <th style="width:70px">操作</th>
+          </tr></thead>
+          <tbody id="acc-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 契約情報タブ -->
+    <div id="dtab-contract" class="tab-content">
+      <div class="contract-grid" id="contract-grid"></div>
+    </div>
+
+    <!-- メモタブ -->
+    <div id="dtab-memo" class="tab-content">
+      <div class="memo-box">
+        <div class="memo-text" id="memo-text"></div>
+        <button class="btn btn-sm memo-edit-btn" onclick="editMemo()">✏ 編集</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- モーダル -->
+<div class="modal-overlay" id="modal-overlay" onclick="onOverlayClick(event)"><div class="modal" id="modal-content"></div></div>
+
+<!-- 日付モーダル -->
+<div class="date-modal-bg" id="date-modal-bg" onclick="closeDateModalBg(event)">
+  <div class="date-modal">
+    <h3>契約更新日で絞り込み</h3>
+    <div class="date-range-row">
+      <input type="date" id="dm-from"><span style="color:#aaa">〜</span><input type="date" id="dm-to">
+    </div>
+    <div class="date-modal-actions">
+      <button class="btn" onclick="clearDateFilter()">クリア</button>
+      <button class="btn" onclick="document.getElementById('date-modal-bg').classList.remove('open')">キャンセル</button>
+      <button class="btn btn-primary" onclick="applyDateFilter()">絞り込み結果を表示</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const GAS_URL = 'https://script.google.com/macros/s/AKfycby11ubaJ5zmNlNvP_iXxQofudIlkbtaugltwSdgfqBq3sEkcs5eWUf6ukFo8V6eHUqU/exec';
+
+// 状態
+let swList = [], accounts = [], genres = [], depts = [];
+let currentSw = null;
+let sortKey = '追加日時', sortDir = -1;
+let accSortKey = 'メンバーのメールアドレス', accSortDir = 1;
+
+// ── ユーティリティ ──
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function v(id){const el=document.getElementById(id);return el?el.value:'';}
+function toDisplay(s){if(!s)return'';const d=s.trim();if(/^\d{4}-\d{2}-\d{2}$/.test(d))return d.replace(/-/g,'/');if(/^\d{4}\/\d{1,2}\/\d{1,2}/.test(d))return d;return d;}
+function normDateYM(s){if(!s)return'';return toDisplay(s).substring(0,7).replace(/\//g,'-');}
+
+function showInd(state,msg){
+  const el=document.getElementById('save-ind');el.className='save-ind '+state;el.textContent=msg||'';
+  const btn=document.getElementById('reload-btn');
+  if(btn){btn.disabled=state==='saving';btn.style.opacity=state==='saving'?'0.4':'';}
+  if(state==='saved')setTimeout(()=>{el.textContent='';el.className='save-ind';},3000);
+}
+
+// ── API ──
+async function gasGet(action,extra=''){
+  const url=GAS_URL+'?action='+action+(extra?'&'+extra:'')+'&t='+Date.now();
+  const res=await fetch(url,{cache:'no-store'});return res.json();
+}
+async function gasPost(action,data,extra={}){
+  const body=Object.assign({action},extra,{data});
+  const res=await fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body)});
+  return res.json();
+}
+
+// ── タブ ──
+function showMainTab(name){
+  ['list','genre','dept'].forEach(t=>{
+    document.getElementById('tab-'+t).style.display=t===name?'':'none';
+    document.getElementById('sw-detail').classList.remove('open');
+  });
+  document.querySelectorAll('.main-tab').forEach((el,i)=>{el.classList.toggle('active',['list','genre','dept'][i]===name);});
+}
+
+// ── データ読み込み ──
+async function reloadAll(){
+  showInd('saving','読み込み中...');
+  document.getElementById('sw-tbody').innerHTML=`<tr><td colspan="17" class="loading"><span class="spinner"></span>読み込み中...</td></tr>`;
+  try{
+    const [sw,gen,dep]=await Promise.all([gasGet('getSoftwareList'),gasGet('getGenres'),gasGet('getDepts')]);
+    if(sw.error)throw new Error(sw.error);
+    swList=Array.isArray(sw)?sw:[];
+    genres=Array.isArray(gen)?gen:[];
+    depts=Array.isArray(dep)?dep:[];
+    updateFilters();renderGenreList();renderDeptList();render();
+    showInd('saved','読み込み完了');
+  }catch(e){showInd('error','エラー: '+e.message);}
+}
+
+async function loadAccounts(swName){
+  try{
+    const acc=await gasGet('getAccounts','swName='+encodeURIComponent(swName));
+    accounts=Array.isArray(acc)?acc:[];
+    renderAccounts();updateUsageSummary();
+  }catch(e){showInd('error','アカウント読み込みエラー: '+e.message);}
+}
+
+// ── フィルター ──
+function updateFilters(){
+  const gf=document.getElementById('f-genre');const curG=gf.value;
+  gf.innerHTML='<option value="">ジャンル: すべて</option>';
+  genres.forEach(g=>{const o=document.createElement('option');o.value=g;o.textContent=g;if(g===curG)o.selected=true;gf.appendChild(o);});
+  const df=document.getElementById('f-dept');const curD=df.value;
+  df.innerHTML='<option value="">管理部署: すべて</option>';
+  depts.forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent=d;if(d===curD)o.selected=true;df.appendChild(o);});
+}
+
+function resetFilters(){
+  ['f-word','f-renew-from','f-renew-to'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['f-genre','f-dept'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const lbl=document.getElementById('lbl-renew');if(lbl)lbl.textContent='';
+  document.getElementById('btn-renew').classList.remove('active');
+  render();
+}
+
+function setSort(k){if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=-1;}render();}
+function setAccSort(k){if(accSortKey===k)accSortDir*=-1;else{accSortKey=k;accSortDir=1;}renderAccounts();}
+
+function getFiltered(){
+  const q=v('f-word').toLowerCase(),gn=v('f-genre'),dp=v('f-dept');
+  const rf=v('f-renew-from'),rt=v('f-renew-to');
+  return swList.filter(r=>{
+    if(q&&!r['ソフトウェア名'].toLowerCase().includes(q))return false;
+    if(gn&&r['ジャンル']!==gn)return false;
+    if(dp&&r['管理部署']!==dp)return false;
+    if(rf||rt){const ym=normDateYM(r['契約更新日']);if(rf&&ym&&ym<rf.substring(0,7))return false;if(rt&&ym&&ym>rt.substring(0,7))return false;}
+    return true;
+  }).sort((a,b)=>{const va=a[sortKey]||'',vb=b[sortKey]||'';return va<vb?-sortDir:va>vb?sortDir:0;});
+}
+
+// ── メインレンダリング ──
+function render(){
+  const rows=getFiltered();
+  document.getElementById('result-count').textContent=rows.length<swList.length?`${swList.length}件中 ${rows.length}件表示`:`全${swList.length}件`;
+  const SORT_COLS=['ソフトウェア名','契約プラン','合計月額料金','アカウント未利用率','総アカウント数','有償アカウント数','無償アカウント数','シャドーID数','契約の種類','支払いサイクル','契約開始日','契約更新日','管理部署','最終取得日時','追加日時'];
+  SORT_COLS.forEach(k=>{const el=document.getElementById('s-'+k);if(el)el.textContent=sortKey===k?(sortDir>0?'▲':'▼'):'';});
+  const tbody=document.getElementById('sw-tbody');
+  if(!rows.length){tbody.innerHTML=`<tr><td colspan="17" class="empty">該当するソフトウェアが見つかりません</td></tr>`;return;}
+  tbody.innerHTML=rows.map(r=>{
+    const icon=getSwIcon(r['ソフトウェア名']);
+    const renewalBadge=isRenewalSoon(r['契約更新日'])?`<span class="badge badge-renewal">更新まじか</span>`:'';
+    return`<tr class="sw-row" onclick="openDetail('${esc(r['ソフトウェア名'])}')">
+      <td><div class="sw-name-cell">${icon}<div><div style="font-weight:500">${esc(r['ソフトウェア名'])}</div></div></div></td>
+      <td>${esc(r['契約プラン'])||'—'}</td>
+      <td style="text-align:right">${r['合計月額料金']?'¥'+Number(r['合計月額料金']).toLocaleString():'—'}</td>
+      <td style="text-align:right">${r['アカウント未利用率']?r['アカウント未利用率']+'%':'—'}</td>
+      <td style="text-align:right">${esc(r['総アカウント数'])||'—'}</td>
+      <td style="text-align:right">${esc(r['有償アカウント数'])||'—'}</td>
+      <td style="text-align:right">${esc(r['無償アカウント数'])||'—'}</td>
+      <td style="text-align:right">${esc(r['シャドーID数'])||'—'}</td>
+      <td>${esc(r['契約の種類'])||'—'}</td>
+      <td>${esc(r['支払いサイクル'])||'—'}</td>
+      <td style="font-size:12px">${esc(toDisplay(r['契約開始日']))||'—'}</td>
+      <td style="font-size:12px">${esc(toDisplay(r['契約更新日']))||'—'} ${renewalBadge}</td>
+      <td>${esc(r['管理部署'])||'—'}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${esc(r['メモ'])||'—'}</td>
+      <td style="font-size:11px;color:#aaa">${esc(r['最終取得日時'])||'—'}</td>
+      <td style="font-size:11px;color:#aaa">${esc(r['追加日時'])||'—'}</td>
+      <td onclick="event.stopPropagation()"><button class="btn btn-sm" onclick="openEditSw('${esc(r['ソフトウェア名'])}')">編集</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function isRenewalSoon(dateStr){
+  if(!dateStr)return false;
+  const d=new Date(toDisplay(dateStr).replace(/\//g,'-'));
+  if(isNaN(d))return false;
+  const diff=Math.round((d-new Date())/(1000*60*60*24));
+  return diff>=0&&diff<=30;
+}
+
+function getSwIcon(name){
+  const colors={'Zoom':'#2D8CFF','Microsoft 365':'#D83B01','Notion':'#1a1a1a','Google Workspace':'#4285F4','Talknote':'#FF6B6B','NotePM':'#00A68C'};
+  const color=colors[name]||'#888';
+  return`<div class="sw-icon" style="background:${color}">${esc(name.charAt(0))}</div>`;
+}
+
+// ── 個別ページ ──
+async function openDetail(swName){
+  currentSw=swList.find(r=>r['ソフトウェア名']===swName);
+  if(!currentSw)return;
+  // 一覧非表示・詳細表示
+  document.getElementById('tab-list').style.display='none';
+  document.getElementById('sw-detail').classList.add('open');
+  // ヘッダー
+  document.getElementById('detail-breadcrumb').textContent=swName;
+  document.getElementById('detail-name').textContent=swName;
+  document.getElementById('detail-genre').textContent=currentSw['ジャンル']||'';
+  document.getElementById('detail-icon').innerHTML=getSwIcon(swName);
+  // デフォルトタブ
+  showDetailTab('usage');
+  // アカウント読み込み
+  document.getElementById('acc-tbody').innerHTML=`<tr><td colspan="14" class="loading"><span class="spinner"></span>読み込み中...</td></tr>`;
+  await loadAccounts(swName);
+  renderContractInfo();renderMemo();
+}
+
+function backToList(){
+  currentSw=null;
+  document.getElementById('sw-detail').classList.remove('open');
+  document.getElementById('tab-list').style.display='';
+}
+
+function showDetailTab(name){
+  ['usage','contract','memo'].forEach(t=>{
+    document.getElementById('dtab-'+t).classList.toggle('active',t===name);
+  });
+  document.querySelectorAll('.detail-tab').forEach((el,i)=>{
+    el.classList.toggle('active',['usage','contract','memo'][i]===name);
+  });
+}
+
+function updateUsageSummary(){
+  const total=accounts.length;
+  const active=accounts.filter(a=>a['利用状況アンケート']==='利用継続').length;
+  const unused=accounts.filter(a=>a['利用状況アンケート']==='利用終了').length;
+  document.getElementById('usage-summary').innerHTML=`
+    <div class="usage-card"><div class="usage-label">総アカウント数</div><div class="usage-val">${total}</div></div>
+    <div class="usage-card"><div class="usage-label">利用中</div><div class="usage-val" style="color:#2E7D32">${active}</div></div>
+    <div class="usage-card"><div class="usage-label">未利用</div><div class="usage-val" style="color:#c0392b">${unused}</div></div>
+    <div class="usage-card"><div class="usage-label">未利用率</div><div class="usage-val">${total>0?Math.round(unused/total*100):0}%</div></div>
+    <div class="usage-card"><div class="usage-label">合計月額料金</div><div class="usage-val" style="font-size:16px">${currentSw&&currentSw['合計月額料金']?'¥'+Number(currentSw['合計月額料金']).toLocaleString():'—'}</div></div>
+  `;
+}
+
+function renderAccounts(){
+  const q=v('acc-word').toLowerCase();
+  const tk=v('acc-task');
+  const filtered=accounts.filter(a=>{
+    if(q&&!((a['メンバーのメールアドレス']||'')+(a['メンバー名']||'')).toLowerCase().includes(q))return false;
+    if(tk&&a['管理者のタスク']!==tk)return false;
+    return true;
+  }).sort((a,b)=>{const va=a[accSortKey]||'',vb=b[accSortKey]||'';return va<vb?-accSortDir:va>vb?accSortDir:0;});
+  const tbody=document.getElementById('acc-tbody');
+  if(!filtered.length){tbody.innerHTML=`<tr><td colspan="14" class="empty">アカウントがありません</td></tr>`;return;}
+  tbody.innerHTML=filtered.map((a,i)=>`<tr>
+    <td>${esc(a['メンバーのメールアドレス'])||'—'}</td>
+    <td>${esc(a['メンバー名'])||'—'}</td>
+    <td>${esc(a['管理者のタスク'])||'—'}</td>
+    <td>${esc(a['アカウント管理'])||'—'}</td>
+    <td>${esc(a['アカウント'])||'—'}</td>
+    <td>${esc(a['ライセンス'])||'—'}</td>
+    <td>${esc(a['利用状況アンケート'])||'—'}</td>
+    <td style="font-size:11px">${esc(a['最近のアカウント利用'])||'—'}</td>
+    <td style="font-size:12px">${esc(toDisplay(a['利用開始日']))||'—'}</td>
+    <td style="font-size:12px">${esc(toDisplay(a['利用終了日']))||'—'}</td>
+    <td style="font-size:11px">${esc(a['アカウント作成日時'])||'—'}</td>
+    <td style="font-size:11px">${esc(a['アカウント削除日時'])||'—'}</td>
+    <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis">${esc(a['アカウントメモ'])||'—'}</td>
+    <td onclick="event.stopPropagation()"><button class="btn btn-sm" onclick="openEditAccount(${i})">編集</button></td>
+  </tr>`).join('');
+  // タスクフィルター更新
+  const taskSel=document.getElementById('acc-task');const curT=taskSel.value;
+  const tasks=[...new Set(accounts.map(a=>a['管理者のタスク']).filter(Boolean))];
+  taskSel.innerHTML='<option value="">管理者のタスク: すべて</option>';
+  tasks.forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=t;if(t===curT)o.selected=true;taskSel.appendChild(o);});
+}
+
+function renderContractInfo(){
+  if(!currentSw)return;
+  const fields=[
+    ['契約プラン','契約の種類','支払いサイクル'],
+    ['料金体系','契約開始日','契約周期'],
+    ['契約更新日','契約更新の通知時期','管理部署'],
+  ];
+  document.getElementById('contract-grid').innerHTML=
+    ['契約プラン','契約の種類','支払いサイクル','契約開始日','契約更新日','管理部署'].map(f=>`
+      <div class="contract-item"><label>${esc(f)}</label><span>${esc(toDisplay(currentSw[f]))||'—'}</span></div>
+    `).join('');
+}
+
+function renderMemo(){
+  if(!currentSw)return;
+  document.getElementById('memo-text').textContent=currentSw['メモ']||'（メモなし）';
+}
+
+function editMemo(){
+  if(!currentSw)return;
+  const newMemo=prompt('メモを編集',currentSw['メモ']||'');
+  if(newMemo===null)return;
+  currentSw['メモ']=newMemo;
+  renderMemo();
+  saveSw();
+}
+
+// ── ソフトウェア追加・編集モーダル ──
+function openAddSw(){showSwModal({},true);}
+function openEditSw(name){const sw=swList.find(r=>r['ソフトウェア名']===name);if(sw)showSwModal(sw,false);}
+function editCurrentSw(){if(currentSw)showSwModal(currentSw,false);}
+
+function showSwModal(r,isNew){
+  const deptOpts=depts.map(d=>`<option value="${esc(d)}"${r['管理部署']===d?' selected':''}>${esc(d)}</option>`).join('');
+  const genreOpts=genres.map(g=>`<option value="${esc(g)}"${r['ジャンル']===g?' selected':''}>${esc(g)}</option>`).join('');
+  document.getElementById('modal-content').innerHTML=`
+    <h2>${isNew?'ソフトウェアを追加':'ソフトウェアを編集'}</h2>
+    <div class="form-grid">
+      <div class="form-section">基本情報</div>
+      <div class="form-field full"><label>ソフトウェア名 *</label><input id="fm-ソフトウェア名" value="${esc(r['ソフトウェア名']||'')}"></div>
+      <div class="form-field"><label>ジャンル</label><select id="fm-ジャンル"><option value="">未設定</option>${genreOpts}</select></div>
+      <div class="form-field"><label>契約プラン</label><input id="fm-契約プラン" value="${esc(r['契約プラン']||'')}"></div>
+      <div class="form-section">アカウント情報</div>
+      <div class="form-field"><label>総アカウント数</label><input type="number" id="fm-総アカウント数" value="${esc(r['総アカウント数']||'')}"></div>
+      <div class="form-field"><label>有償アカウント数</label><input type="number" id="fm-有償アカウント数" value="${esc(r['有償アカウント数']||'')}"></div>
+      <div class="form-field"><label>無償アカウント数</label><input type="number" id="fm-無償アカウント数" value="${esc(r['無償アカウント数']||'')}"></div>
+      <div class="form-field"><label>シャドーID数</label><input type="number" id="fm-シャドーID数" value="${esc(r['シャドーID数']||'')}"></div>
+      <div class="form-field"><label>アカウント未利用率（%）</label><input type="number" id="fm-アカウント未利用率" value="${esc(r['アカウント未利用率']||'')}"></div>
+      <div class="form-section">契約情報</div>
+      <div class="form-field"><label>契約の種類</label>
+        <select id="fm-契約の種類"><option value="">未設定</option>${['定期課金','従量課金','買い切り','無料'].map(o=>`<option${r['契約の種類']===o?' selected':''}>${esc(o)}</option>`).join('')}</select>
+      </div>
+      <div class="form-field"><label>支払いサイクル</label>
+        <select id="fm-支払いサイクル"><option value="">未設定</option>${['月払い','年払い','都度払い'].map(o=>`<option${r['支払いサイクル']===o?' selected':''}>${esc(o)}</option>`).join('')}</select>
+      </div>
+      <div class="form-field"><label>合計月額料金</label><input type="number" id="fm-合計月額料金" value="${esc(r['合計月額料金']||'')}"></div>
+      <div class="form-field"><label>契約開始日</label><input type="date" id="fm-契約開始日" value="${esc(toInputDate(r['契約開始日']||''))}"></div>
+      <div class="form-field"><label>契約更新日</label><input type="date" id="fm-契約更新日" value="${esc(toInputDate(r['契約更新日']||''))}"></div>
+      <div class="form-field"><label>管理部署</label><select id="fm-管理部署"><option value="">未設定</option>${deptOpts}</select></div>
+      <div class="form-field full"><label>メモ</label><textarea id="fm-メモ">${esc(r['メモ']||'')}</textarea></div>
+    </div>
+    <div class="modal-actions">
+      ${!isNew?`<button class="btn btn-danger" onclick="deleteSw('${esc(r['ソフトウェア名']||'')}')">削除</button>`:''}
+      <button class="btn" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveSwModal('${esc(r['ソフトウェア名']||'')}',${isNew})">保存</button>
+    </div>`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function toInputDate(s){return toDisplay(s).substring(0,10).replace(/\//g,'-');}
+
+async function saveSwModal(oldName,isNew){
+  const fields=['ソフトウェア名','ジャンル','契約プラン','総アカウント数','有償アカウント数','無償アカウント数','シャドーID数','アカウント未利用率','契約の種類','支払いサイクル','合計月額料金','契約開始日','契約更新日','管理部署','メモ'];
+  const rec={};
+  fields.forEach(f=>{
+    const el=document.getElementById('fm-'+f);if(!el)return;
+    let val=el.value;
+    if(['契約開始日','契約更新日'].includes(f)&&val&&/^\d{4}-\d{2}-\d{2}$/.test(val))val=val.replace(/-/g,'/');
+    rec[f]=val;
+  });
+  if(!rec['ソフトウェア名']){alert('ソフトウェア名は必須です');return;}
+  const now=new Date();
+  const ts=`${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  if(isNew)rec['追加日時']=ts;
+  else{const old=swList.find(r=>r['ソフトウェア名']===oldName)||{};rec['追加日時']=old['追加日時']||ts;}
+  if(isNew)swList.push(rec);
+  else{const i=swList.findIndex(r=>r['ソフトウェア名']===oldName);if(i>=0)swList[i]=rec;}
+  if(currentSw&&currentSw['ソフトウェア名']===oldName){currentSw=rec;renderContractInfo();renderMemo();}
+  closeModal();render();
+  await saveSw();
+}
+
+async function saveSw(){
+  showInd('saving','保存中...');
+  try{
+    const res=await gasPost('saveSoftwareList',swList);
+    if(res.error)throw new Error(res.error);
+    showInd('saved',`保存済み ✓`);
+  }catch(e){showInd('error','保存エラー: '+e.message);}
+}
+
+function deleteSw(name){
+  if(!confirm(`「${name}」を削除しますか？`))return;
+  swList=swList.filter(r=>r['ソフトウェア名']!==name);
+  closeModal();if(currentSw&&currentSw['ソフトウェア名']===name)backToList();
+  render();saveSw();
+}
+
+// ── アカウント追加・編集 ──
+function openAddAccount(){showAccountModal({},true);}
+function openEditAccount(idx){const filtered=getFilteredAccounts();showAccountModal(filtered[idx],false,idx);}
+function getFilteredAccounts(){return accounts;}// 簡易版
+
+function showAccountModal(r,isNew,idx){
+  const ACC_FIELDS=[
+    {k:'メンバーのメールアドレス',full:true},{k:'メンバー名'},{k:'管理者のタスク'},{k:'アカウント管理'},
+    {k:'アカウント'},{k:'ライセンス'},{k:'利用状況アンケート'},{k:'最近のアカウント利用'},
+    {k:'利用開始日',type:'date'},{k:'利用終了日',type:'date'},
+    {k:'アカウント作成日時'},{k:'アカウント削除日時'},
+    {k:'アカウントメモ',type:'textarea',full:true},
+  ];
+  const rows=ACC_FIELDS.map(f=>{
+    const val=esc(r[f.k]||'');const cls='form-field'+(f.full?' full':'');
+    let input=f.type==='textarea'?`<textarea id="fma-${esc(f.k)}">${val}</textarea>`:
+      f.type==='date'?`<input type="date" id="fma-${esc(f.k)}" value="${esc(toInputDate(r[f.k]||''))}">`:
+      `<input id="fma-${esc(f.k)}" value="${val}">`;
+    return`<div class="${cls}"><label>${esc(f.k)}</label>${input}</div>`;
+  }).join('');
+  document.getElementById('modal-content').innerHTML=`
+    <h2>${isNew?'アカウントを追加':'アカウントを編集'}</h2>
+    <div class="form-grid">${rows}</div>
+    <div class="modal-actions">
+      ${!isNew?`<button class="btn btn-danger" onclick="deleteAccount(${idx})">削除</button>`:''}
+      <button class="btn" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveAccountModal(${isNew},${idx??-1})">保存</button>
+    </div>`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+async function saveAccountModal(isNew,idx){
+  const ACC_FIELDS=['メンバーのメールアドレス','メンバー名','管理者のタスク','アカウント管理','アカウント','ライセンス','利用状況アンケート','最近のアカウント利用','利用開始日','利用終了日','アカウント作成日時','アカウント削除日時','アカウントメモ'];
+  const rec={};
+  ACC_FIELDS.forEach(f=>{const el=document.getElementById('fma-'+f);if(!el)return;let val=el.value;if(['利用開始日','利用終了日'].includes(f)&&val&&/^\d{4}-\d{2}-\d{2}$/.test(val))val=val.replace(/-/g,'/');rec[f]=val;});
+  rec['ソフトウェア名']=currentSw['ソフトウェア名'];
+  if(isNew)accounts.push(rec);
+  else if(idx>=0)accounts[idx]=rec;
+  closeModal();renderAccounts();updateUsageSummary();
+  showInd('saving','保存中...');
+  try{
+    const res=await gasPost('saveAccounts',accounts,{swName:currentSw['ソフトウェア名']});
+    if(res.error)throw new Error(res.error);showInd('saved','アカウント保存済み ✓');
+  }catch(e){showInd('error','保存エラー: '+e.message);}
+}
+
+function deleteAccount(idx){
+  if(!confirm('このアカウントを削除しますか？'))return;
+  accounts.splice(idx,1);closeModal();renderAccounts();updateUsageSummary();
+  gasPost('saveAccounts',accounts,{swName:currentSw['ソフトウェア名']});
+}
+
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+function onOverlayClick(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
+
+// ── 日付モーダル ──
+function openDateModal(){
+  document.getElementById('dm-from').value=v('f-renew-from');
+  document.getElementById('dm-to').value=v('f-renew-to');
+  document.getElementById('date-modal-bg').classList.add('open');
+}
+function closeDateModalBg(e){if(e.target===document.getElementById('date-modal-bg'))document.getElementById('date-modal-bg').classList.remove('open');}
+function applyDateFilter(){
+  const from=v('dm-from'),to=v('dm-to');
+  document.getElementById('f-renew-from').value=from;
+  document.getElementById('f-renew-to').value=to;
+  const lbl=document.getElementById('lbl-renew');const btn=document.getElementById('btn-renew');
+  if(from||to){lbl.textContent=(from?from.substring(0,7):'')+(to?'〜'+to.substring(0,7):'');btn.classList.add('active');}
+  else{lbl.textContent='';btn.classList.remove('active');}
+  document.getElementById('date-modal-bg').classList.remove('open');render();
+}
+function clearDateFilter(){
+  ['dm-from','dm-to','f-renew-from','f-renew-to'].forEach(id=>{document.getElementById(id).value='';});
+  document.getElementById('lbl-renew').textContent='';
+  document.getElementById('btn-renew').classList.remove('active');
+  document.getElementById('date-modal-bg').classList.remove('open');render();
+}
+
+// ── マスタ ──
+function renderGenreList(){
+  const el=document.getElementById('genre-list');if(!el)return;
+  el.innerHTML=genres.length?genres.map((g,i)=>`<div class="master-item"><span>${esc(g)}</span><button class="btn btn-sm btn-danger" onclick="genres.splice(${i},1);renderGenreList()">削除</button></div>`).join(''):'<p style="font-size:13px;color:#aaa;padding:8px">まだ登録されていません</p>';
+}
+function addGenre(){const input=document.getElementById('genre-new');const val=input.value.trim();if(!val)return;genres.push(val);input.value='';renderGenreList();}
+async function saveGenres(){showInd('saving','保存中...');try{const res=await gasPost('saveGenres',genres);if(res.error)throw new Error(res.error);showInd('saved','ジャンルマスタ保存済み ✓');updateFilters();}catch(e){showInd('error','保存エラー: '+e.message);}}
+
+function renderDeptList(){
+  const el=document.getElementById('dept-list');if(!el)return;
+  el.innerHTML=depts.length?depts.map((d,i)=>`<div class="master-item"><span>${esc(d)}</span><button class="btn btn-sm btn-danger" onclick="depts.splice(${i},1);renderDeptList()">削除</button></div>`).join(''):'<p style="font-size:13px;color:#aaa;padding:8px">まだ登録されていません</p>';
+}
+function addDept(){const input=document.getElementById('dept-new');const val=input.value.trim();if(!val)return;depts.push(val);input.value='';renderDeptList();}
+async function saveDepts(){showInd('saving','保存中...');try{const res=await gasPost('saveDepts',depts);if(res.error)throw new Error(res.error);showInd('saved','部署マスタ保存済み ✓');updateFilters();}catch(e){showInd('error','保存エラー: '+e.message);}}
+
+// 起動
+reloadAll();
+</script>
+</body>
+</html>

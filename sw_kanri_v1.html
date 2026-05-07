@@ -142,6 +142,29 @@ tr.sw-row:hover td{background:#f5f5f3;cursor:pointer}
 .memo-edit-btn{position:absolute;top:1rem;right:1rem}
 
 /* ローディング */
+.dept-list{border:0.5px solid #e0e0da;border-radius:8px;overflow:hidden;margin-bottom:1rem}
+.dept-row{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:10px;padding:8px 12px;border-bottom:0.5px solid #f0f0ea;background:#fff}
+.dept-row:last-child{border-bottom:none}
+.dept-row:hover{background:#fafafa}
+.dept-name-cell{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500}
+.dept-parent-sel{font-size:12px;border:0.5px solid #d0d0ca;border-radius:5px;padding:3px 8px;background:#fff;color:#555;outline:none;max-width:180px}
+.dept-level-badge{font-size:10px;padding:2px 7px;border-radius:8px;white-space:nowrap}
+.dept-empty{padding:2rem;text-align:center;font-size:13px;color:#aaa}
+.ctx-menu-wrap{position:relative;flex-shrink:0}
+.ctx-btn{font-size:16px;width:28px;height:28px;border:none;background:transparent;cursor:pointer;color:#aaa;border-radius:5px;display:flex;align-items:center;justify-content:center}
+.ctx-btn:hover{background:#f0f0ea;color:#555}
+.ctx-menu{display:none;position:fixed;background:#fff;border:0.5px solid #e0e0da;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);min-width:160px;z-index:1000;overflow:hidden}
+.ctx-menu.open{display:block}
+.ctx-menu-item{display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:13px;cursor:pointer;color:#1a1a1a;white-space:nowrap}
+.ctx-menu-item:hover{background:#f5f5f3}
+.ctx-menu-item.danger{color:#c0392b}.ctx-menu-item.danger:hover{background:#fdf0f0}
+.ctx-menu-sep{height:0.5px;background:#eee;margin:2px 0}
+.add-form{background:#f8f8f6;border-radius:8px;padding:1rem;margin-top:.5rem}
+.add-form h4{font-size:12px;font-weight:600;color:#888;margin-bottom:.75rem}
+.add-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+.add-field{display:flex;flex-direction:column;gap:3px;flex:1;min-width:140px}
+.add-field label{font-size:11px;color:#888}
+.add-field input,.add-field select{font-size:13px;border:0.5px solid #d0d0ca;border-radius:6px;padding:5px 8px;outline:none;background:#fff;width:100%}
 .loading{padding:3rem;text-align:center;color:#888}
 .spinner{display:inline-block;width:18px;height:18px;border:2px solid #e0e0da;border-top-color:#888;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -212,9 +235,20 @@ tr.sw-row:hover td{background:#f5f5f3;cursor:pointer}
   <!-- 部署マスタ -->
   <div id="tab-dept" style="display:none">
     <div class="master-panel">
-      <div class="section-header"><h3>部署マスタ</h3><button class="btn btn-primary btn-sm" onclick="saveDepts()">スプレッドシートに保存</button></div>
-      <div class="master-list" id="dept-list"></div>
-      <div class="master-add"><input type="text" id="dept-new" placeholder="新しい部署名を入力..."><button class="btn" onclick="addDept()">追加</button></div>
+      <div class="section-header">
+        <h3>部署マスタ（3階層対応・ハードウェア管理と共用）</h3>
+        <button class="btn btn-primary btn-sm" onclick="saveDepts()">スプレッドシートに保存</button>
+      </div>
+      <p style="font-size:12px;color:#aaa;margin-bottom:.75rem">「親部署」欄を変更すると階層を移動できます。変更後は「スプレッドシートに保存」を押してください。</p>
+      <div id="dept-list" class="dept-list"></div>
+      <div class="add-form">
+        <h4>部署を追加</h4>
+        <div class="add-row">
+          <div class="add-field"><label>部署名</label><input type="text" id="dept-new-name" placeholder="例：串カツ田中立川店"></div>
+          <div class="add-field"><label>親部署（任意）</label><select id="dept-new-parent"><option value="">なし（最上位）</option></select></div>
+          <button class="btn btn-primary" onclick="addDept()" style="flex-shrink:0">追加</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -723,40 +757,122 @@ function renderGenreList(){
 function addGenre(){const input=document.getElementById('genre-new');const val=input.value.trim();if(!val)return;genres.push(val);input.value='';renderGenreList();}
 async function saveGenres(){showInd('saving','保存中...');try{const res=await gasPost('saveGenres',genres);if(res.error)throw new Error(res.error);showInd('saved','ジャンルマスタ保存済み ✓');updateFilters();}catch(e){showInd('error','保存エラー: '+e.message);}}
 
-// 部署をフラットな名前リストに変換（フィルター・セレクト用）
-function getDeptNames(){return depts.map(d=>typeof d==='string'?d:d.name);}
-
-// 階層付き選択肢
+// ── 部署マスタ（ハードウェア管理と同じUI） ──
+function buildDeptTree(items){
+  const map={},roots=[];
+  items.forEach(d=>{map[d.name]={...d,children:[]};});
+  items.forEach(d=>{if(d.parent&&map[d.parent])map[d.parent].children.push(map[d.name]);else roots.push(map[d.name]);});
+  return roots;
+}
 function flatDeptOptions(items,depth=0){
-  const roots=items.filter(d=>(typeof d==='string'?'':d.parent)==='');
   const opts=[];
-  function walk(nodes,d){nodes.forEach(n=>{const name=typeof n==='string'?n:n.name;opts.push({value:name,label:'　'.repeat(d)+name});const children=items.filter(x=>(typeof x==='string'?'':x.parent)===name);walk(children,d+1);});}
-  walk(roots,depth);
+  const tree=buildDeptTree(items);
+  function walk(nodes,d){nodes.forEach(n=>{opts.push({value:n.name,label:'　'.repeat(d)+n.name});if(n.children.length)walk(n.children,d+1);});}
+  walk(tree,depth);
   return opts;
 }
-
-function renderDeptList(){
-  const el=document.getElementById('dept-list');if(!el)return;
-  const names=getDeptNames();
-  el.innerHTML=names.length?names.map((d,i)=>`<div class="master-item"><span>${esc(d)}</span><button class="btn btn-sm btn-danger" onclick="removeDeptSw(${i})">削除</button></div>`).join(''):'<p style="font-size:13px;color:#aaa;padding:8px">まだ登録されていません（ハードウェア管理の部署マスタと共用です）</p>';
+function treeToFlat(nodes,parent=''){
+  const result=[];
+  nodes.forEach(node=>{result.push({name:node.name,parent});if(node.children.length)result.push(...treeToFlat(node.children,node.name));});
+  return result;
 }
-function removeDeptSw(i){
-  const names=getDeptNames();names.splice(i,1);
-  // deptsからも削除
-  depts=depts.filter((_,idx)=>idx!==i);
-  renderDeptList();updateFilters();
+function getDeptDepth(name){
+  let d=depts.find(x=>x.name===name);let depth=0;
+  while(d&&d.parent){depth++;d=depts.find(x=>x.name===d.parent);if(depth>10)break;}
+  return depth;
+}
+function isDescendantSw(anc,target){
+  let cur=depts.find(d=>d.name===target);let count=0;
+  while(cur&&cur.parent){if(cur.parent===anc)return true;cur=depts.find(d=>d.name===cur.parent);if(++count>20)break;}
+  return false;
+}
+function renderDeptList(){
+  const listEl=document.getElementById('dept-list');if(!listEl)return;
+  if(!depts.length){listEl.innerHTML='<div class="dept-empty">まだ登録されていません</div>';updateDeptParentSelect();return;}
+  const ordered=treeToFlat(buildDeptTree(depts));
+  const allOpts=flatDeptOptions(depts);
+  const lc=[['#f0f0ea','#888'],['#F3E5F5','#6A1B9A'],['#E3F2FD','#1565C0']];
+  const ll=['L1 最上位','L2 中階層','L3 末端'];
+  listEl.innerHTML=ordered.map(d=>{
+    const depth=getDeptDepth(d.name);const [bg,color]=lc[Math.min(depth,2)];
+    const badge=`<span class="dept-level-badge" style="background:${bg};color:${color}">${ll[Math.min(depth,2)]}</span>`;
+    const validOpts=allOpts.filter(o=>o.value!==d.name&&!isDescendantSw(d.name,o.value));
+    const selOpts='<option value="">なし（最上位）</option>'+validOpts.map(o=>`<option value="${esc(o.value)}"${d.parent===o.value?' selected':''}>${esc(o.label)}</option>`).join('');
+    const menuId='ctx-sw-'+d.name.replace(/[^a-zA-Z0-9]/g,'_');
+    return`<div class="dept-row">
+      <div class="dept-name-cell"><span style="color:#ddd">${'─'.repeat(depth)}</span><span>${esc(d.name)}</span></div>
+      ${badge}
+      <select class="dept-parent-sel" onchange="changeDeptParentSw('${esc(d.name)}',this.value)">${selOpts}</select>
+      <div class="ctx-menu-wrap">
+        <button class="ctx-btn" onclick="toggleCtxMenuSw(event,'${esc(menuId)}')">⋯</button>
+        <div class="ctx-menu" id="${esc(menuId)}">
+          <div class="ctx-menu-item" onclick="renameDeptSw('${esc(d.name)}');closeAllCtxMenusSw()">✏ 部署名を変更</div>
+          <div class="ctx-menu-sep"></div>
+          <div class="ctx-menu-item danger" onclick="removeDeptSw('${esc(d.name)}');closeAllCtxMenusSw()">🗑 部署を削除</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  updateDeptParentSelect();
+}
+function changeDeptParentSw(name,newParent){const item=depts.find(d=>d.name===name);if(item){item.parent=newParent;renderDeptList();updateFilters();}}
+function updateDeptParentSelect(){
+  const sel=document.getElementById('dept-new-parent');if(!sel)return;
+  const cur=sel.value;while(sel.options.length>1)sel.remove(1);
+  flatDeptOptions(depts).forEach(({value,label})=>{const o=document.createElement('option');o.value=value;o.textContent=label;if(value===cur)o.selected=true;sel.appendChild(o);});
 }
 function addDept(){
-  const input=document.getElementById('dept-new');const val=input.value.trim();if(!val)return;
-  // 文字列またはオブジェクト形式で追加
-  if(depts.length>0&&typeof depts[0]==='object'){depts.push({name:val,parent:''});}
-  else{depts.push(val);}
-  input.value='';renderDeptList();updateFilters();
+  const name=document.getElementById('dept-new-name').value.trim();
+  const parent=document.getElementById('dept-new-parent').value;
+  if(!name)return;
+  if(depts.find(d=>d.name===name)){alert('同じ名前の部署が既に存在します');return;}
+  depts.push({name,parent});
+  document.getElementById('dept-new-name').value='';
+  renderDeptList();updateFilters();
 }
+function renameDeptSw(oldName){
+  const newName=prompt(`部署名を変更
+現在: ${oldName}
+
+新しい部署名:`,oldName);
+  if(!newName||newName.trim()===''||newName.trim()===oldName)return;
+  const trimmed=newName.trim();
+  if(depts.find(d=>d.name===trimmed)){alert('同じ名前が既に存在します');return;}
+  depts.forEach(d=>{if(d.name===oldName)d.name=trimmed;if(d.parent===oldName)d.parent=trimmed;});
+  renderDeptList();updateFilters();
+}
+function removeDeptSw(name){
+  const toRemove=new Set();
+  function collect(n){toRemove.add(n);depts.filter(d=>d.parent===n).forEach(d=>collect(d.name));}
+  collect(name);
+  if(toRemove.size>1&&!confirm(`「${name}」とその子部署（${toRemove.size-1}件）をまとめて削除しますか？`))return;
+  depts=depts.filter(d=>!toRemove.has(d.name));
+  renderDeptList();updateFilters();
+}
+function toggleCtxMenuSw(e,menuId){
+  e.stopPropagation();
+  const menu=document.getElementById(menuId);if(!menu)return;
+  const isOpen=menu.classList.contains('open');
+  closeAllCtxMenusSw();
+  if(!isOpen){
+    const btn=e.currentTarget;const rect=btn.getBoundingClientRect();
+    const menuH=90;
+    if(window.innerHeight-rect.bottom<menuH&&rect.top>menuH){menu.style.bottom=(window.innerHeight-rect.top+4)+'px';menu.style.top='';}
+    else{menu.style.top=(rect.bottom+4)+'px';menu.style.bottom='';}
+    menu.style.right=(window.innerWidth-rect.right)+'px';
+    menu.classList.add('open');
+  }
+}
+function closeAllCtxMenusSw(){document.querySelectorAll('.ctx-menu.open').forEach(m=>m.classList.remove('open'));}
+document.addEventListener('click',closeAllCtxMenusSw);
 async function saveDepts(){
   showInd('saving','保存中...');
-  try{const res=await gasPost('saveDepts',depts);if(res.error)throw new Error(res.error);showInd('saved','部署マスタ保存済み ✓（ハードウェア管理と共用）');updateFilters();}
-  catch(e){showInd('error','保存エラー: '+e.message);}
+  try{
+    const flat=treeToFlat(buildDeptTree(depts));
+    const res=await gasPost('saveDepts',flat);
+    if(res.error)throw new Error(res.error);
+    depts=flat;showInd('saved','部署マスタ保存済み ✓（ハードウェア管理と共用）');updateFilters();
+  }catch(e){showInd('error','保存エラー: '+e.message);}
 }
 
 // 起動

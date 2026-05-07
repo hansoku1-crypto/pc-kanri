@@ -143,6 +143,26 @@ tr.sw-row:hover td{background:#f5f5f3;cursor:pointer}
 
 /* ローディング */
 .dept-list{border:0.5px solid #e0e0da;border-radius:8px;overflow:hidden;margin-bottom:1rem}
+
+/* 列固定 */
+.tbl-wrap{position:relative}
+th.sticky-col,td.sticky-col{position:sticky;left:0;z-index:5;background:#f8f8f6}
+td.sticky-col{background:#fff}
+tr.sw-row:hover td.sticky-col{background:#f5f5f3}
+th.sticky-col{z-index:15}
+
+/* 列表示パネル */
+.col-vis-wrap{position:relative;display:inline-block}
+.col-vis-btn{font-size:12px;padding:5px 10px;border:0.5px solid #d0d0ca;border-radius:6px;background:#fff;cursor:pointer;color:#555;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+.col-vis-btn:hover{background:#f5f5f3}
+.col-vis-panel{display:none;position:absolute;top:calc(100% + 4px);right:0;background:#fff;border:0.5px solid #e0e0da;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);z-index:500;min-width:200px;max-height:420px;overflow-y:auto;padding:8px 0}
+.col-vis-panel.open{display:block}
+.col-vis-header{font-size:11px;font-weight:600;color:#888;padding:4px 14px 8px;border-bottom:0.5px solid #eee;margin-bottom:4px}
+.col-vis-item{display:flex;align-items:center;justify-content:space-between;padding:6px 14px;cursor:pointer;gap:8px}
+.col-vis-item:hover{background:#f5f5f3}
+.col-vis-item span{font-size:13px;flex:1}
+.col-vis-eye{font-size:14px;color:#aaa;flex-shrink:0}
+.col-vis-eye.visible{color:#1a1a1a}
 .dept-row{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:10px;padding:8px 12px;border-bottom:0.5px solid #f0f0ea;background:#fff}
 .dept-row:last-child{border-bottom:none}
 .dept-row:hover{background:#fafafa}
@@ -193,30 +213,21 @@ tr.sw-row:hover td{background:#f5f5f3;cursor:pointer}
         <button class="filter-btn" id="btn-renew" onclick="openDateModal()">契約更新日 <span class="filter-val" id="lbl-renew"></span></button>
         <button class="btn" onclick="resetFilters()">リセット</button>
         <button class="btn btn-primary" onclick="openAddSw()">＋ ソフトウェアを追加</button>
+        <div class="col-vis-wrap">
+          <button class="col-vis-btn" onclick="toggleSwColVisPanel(event)">⇔ 列</button>
+          <div class="col-vis-panel" id="sw-col-vis-panel">
+            <div class="col-vis-header">表示する列を選択</div>
+            <div id="sw-col-vis-list"></div>
+          </div>
+        </div>
         <span class="rc" id="result-count"></span>
       </div>
     </div>
     <input type="hidden" id="f-renew-from"><input type="hidden" id="f-renew-to">
     <div class="tbl-wrap">
       <table id="sw-table">
-        <thead><tr>
-          <th style="width:240px" onclick="setSort('ソフトウェア名')">ソフトウェア名/ワークスペース名<span class="sort-arrow" id="s-ソフトウェア名"></span></th>
-          <th onclick="setSort('契約プラン')">契約プラン<span class="sort-arrow" id="s-契約プラン"></span></th>
-          <th onclick="setSort('合計月額料金')">合計月額料金<span class="sort-arrow" id="s-合計月額料金"></span></th>
-          <th onclick="setSort('アカウント未利用率')">アカウント未利用率<span class="sort-arrow" id="s-アカウント未利用率"></span></th>
-          <th onclick="setSort('総アカウント数')">総アカウント数<span class="sort-arrow" id="s-総アカウント数"></span></th>
-          <th onclick="setSort('有償アカウント数')">有償アカウント数<span class="sort-arrow" id="s-有償アカウント数"></span></th>
-          <th onclick="setSort('無償アカウント数')">無償アカウント数<span class="sort-arrow" id="s-無償アカウント数"></span></th>
-          <th onclick="setSort('シャドーID数')">シャドーID数<span class="sort-arrow" id="s-シャドーID数"></span></th>
-          <th onclick="setSort('契約の種類')">契約の種類<span class="sort-arrow" id="s-契約の種類"></span></th>
-          <th onclick="setSort('支払いサイクル')">支払いサイクル<span class="sort-arrow" id="s-支払いサイクル"></span></th>
-          <th onclick="setSort('契約開始日')">契約開始日<span class="sort-arrow" id="s-契約開始日"></span></th>
-          <th onclick="setSort('契約更新日')">契約更新日<span class="sort-arrow" id="s-契約更新日"></span></th>
-          <th onclick="setSort('管理部署')">管理部署<span class="sort-arrow" id="s-管理部署"></span></th>
-          <th style="min-width:200px">メモ</th>
-          <th onclick="setSort('最終取得日時')">最終取得日時<span class="sort-arrow" id="s-最終取得日時"></span></th>
-          <th onclick="setSort('追加日時')">追加日時<span class="sort-arrow" id="s-追加日時"></span></th>
-          <th style="width:70px">操作</th>
+        <thead><tr id="sw-thead-row">
+          <th style="width:70px" data-op="1">操作</th>
         </tr></thead>
         <tbody id="sw-tbody"></tbody>
       </table>
@@ -347,6 +358,50 @@ let swList = [], accounts = [], genres = [], depts = [];
 let currentSw = null;
 let sortKey = '追加日時', sortDir = -1;
 let accSortKey = 'メンバーのメールアドレス', accSortDir = 1;
+
+// ── ソフトウェア列定義 ──
+const SW_ALL_COLS = ['ソフトウェア名','契約プラン','合計月額料金','アカウント未利用率','総アカウント数','有償アカウント数','無償アカウント数','シャドーID数','契約の種類','支払いサイクル','契約開始日','契約更新日','管理部署','メモ','最終取得日時','追加日時'];
+const SW_FIXED_COL = 'ソフトウェア名';
+const SW_ALWAYS_SHOW = ['ソフトウェア名'];
+
+function getSwColVisState(){
+  try{const s=localStorage.getItem('sw_col_vis');if(s){const p=JSON.parse(s);SW_ALL_COLS.forEach(h=>{if(p[h]===undefined)p[h]=true;});return p;}}catch(e){}
+  const state={};SW_ALL_COLS.forEach(h=>{state[h]=true;});return state;
+}
+function saveSwColVisState(state){try{localStorage.setItem('sw_col_vis',JSON.stringify(state));}catch(e){}}
+function getSwVisibleCols(){
+  const state=getSwColVisState();
+  return SW_ALL_COLS.filter(h=>SW_ALWAYS_SHOW.includes(h)||state[h]!==false);
+}
+
+function renderSwColVisList(){
+  const state=getSwColVisState();
+  const el=document.getElementById('sw-col-vis-list');if(!el)return;
+  el.innerHTML=SW_ALL_COLS.map(h=>{
+    const isAlways=SW_ALWAYS_SHOW.includes(h);
+    const visible=isAlways||state[h]!==false;
+    const eyeIcon=visible?'👁':'<span style="opacity:.3">👁</span>';
+    return`<div class="col-vis-item" ${isAlways?'style="opacity:.5;cursor:default"':''} ${isAlways?'':'onclick="toggleSwColVis(\''+h.replace(/'/g,"\\'")+'\')\"'}>
+      <span>${esc(h)}${isAlways?' 📌':''}</span>
+      <span class="col-vis-eye${visible?' visible':''}">${eyeIcon}</span>
+    </div>`;
+  }).join('');
+}
+function toggleSwColVis(h){
+  if(SW_ALWAYS_SHOW.includes(h))return;
+  const state=getSwColVisState();state[h]=!state[h];
+  saveSwColVisState(state);renderSwColVisList();render();
+}
+function toggleSwColVisPanel(e){
+  e.stopPropagation();
+  const panel=document.getElementById('sw-col-vis-panel');
+  if(!panel.classList.contains('open'))renderSwColVisList();
+  panel.classList.toggle('open');
+}
+document.addEventListener('click',()=>{
+  const p=document.getElementById('sw-col-vis-panel');if(p)p.classList.remove('open');
+  const p2=document.getElementById('col-vis-panel');if(p2)p2.classList.remove('open');
+});
 
 // ── ユーティリティ ──
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
@@ -480,34 +535,46 @@ function getFiltered(){
   }).sort((a,b)=>{const va=a[sortKey]||'',vb=b[sortKey]||'';return va<vb?-sortDir:va>vb?sortDir:0;});
 }
 
-// ── メインレンダリング ──
 function render(){
   const rows=getFiltered();
+  const visCols=getSwVisibleCols();
   document.getElementById('result-count').textContent=rows.length<swList.length?`${swList.length}件中 ${rows.length}件表示`:`全${swList.length}件`;
-  const SORT_COLS=['ソフトウェア名','契約プラン','合計月額料金','アカウント未利用率','総アカウント数','有償アカウント数','無償アカウント数','シャドーID数','契約の種類','支払いサイクル','契約開始日','契約更新日','管理部署','最終取得日時','追加日時'];
-  SORT_COLS.forEach(k=>{const el=document.getElementById('s-'+k);if(el)el.textContent=sortKey===k?(sortDir>0?'▲':'▼'):'';});
+
+  // thead動的生成
+  const tr=document.getElementById('sw-thead-row');
+  tr.querySelectorAll('th[data-col]').forEach(th=>th.remove());
+  const opTh=tr.querySelector('th[data-op]');
+  visCols.forEach(col=>{
+    const th=document.createElement('th');
+    th.setAttribute('data-col',col);
+    if(col===SW_FIXED_COL){th.className='sticky-col';th.style.width='240px';}
+    if(col==='メモ')th.style.minWidth='200px';
+    if(col!=='メモ'){th.style.cursor='pointer';th.onclick=()=>setSort(col);}
+    const label=col==='ソフトウェア名'?'ソフトウェア名/ワークスペース名':col;
+    th.innerHTML=`${esc(label)}<span class="sort-arrow" id="s-${esc(col)}">${sortKey===col?(sortDir>0?'▲':'▼'):''}</span>`;
+    tr.insertBefore(th,opTh);
+  });
+
   const tbody=document.getElementById('sw-tbody');
-  if(!rows.length){tbody.innerHTML=`<tr><td colspan="17" class="empty">該当するソフトウェアが見つかりません</td></tr>`;return;}
+  if(!rows.length){tbody.innerHTML=`<tr><td colspan="${visCols.length+1}" class="empty">該当するソフトウェアが見つかりません</td></tr>`;return;}
   tbody.innerHTML=rows.map(r=>{
     const icon=getSwIcon(r['ソフトウェア名']);
     const renewalBadge=isRenewalSoon(r['契約更新日'])?`<span class="badge badge-renewal">更新まじか</span>`:'';
+    const cells=visCols.map(col=>{
+      const isFixed=col===SW_FIXED_COL;
+      const stickyAttr=isFixed?' class="sticky-col"':'';
+      if(col==='ソフトウェア名')return`<td${stickyAttr}><div class="sw-name-cell">${icon}<div><div style="font-weight:500">${esc(r['ソフトウェア名'])}</div></div></div></td>`;
+      if(col==='合計月額料金')return`<td style="text-align:right">${r[col]?'¥'+Number(r[col]).toLocaleString():'—'}</td>`;
+      if(col==='アカウント未利用率')return`<td style="text-align:right">${r[col]?r[col]+'%':'—'}</td>`;
+      if(['総アカウント数','有償アカウント数','無償アカウント数','シャドーID数'].includes(col))return`<td style="text-align:right">${esc(r[col])||'—'}</td>`;
+      if(col==='契約更新日')return`<td style="font-size:12px">${esc(toDisplay(r[col]))||'—'} ${renewalBadge}</td>`;
+      if(col==='契約開始日')return`<td style="font-size:12px">${esc(toDisplay(r[col]))||'—'}</td>`;
+      if(['最終取得日時','追加日時'].includes(col))return`<td style="font-size:11px;color:#aaa">${esc(r[col])||'—'}</td>`;
+      if(col==='メモ')return`<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${esc(r[col])||'—'}</td>`;
+      return`<td>${esc(r[col])||'—'}</td>`;
+    }).join('');
     return`<tr class="sw-row" onclick="openDetail('${esc(r['ソフトウェア名'])}')">
-      <td><div class="sw-name-cell">${icon}<div><div style="font-weight:500">${esc(r['ソフトウェア名'])}</div></div></div></td>
-      <td>${esc(r['契約プラン'])||'—'}</td>
-      <td style="text-align:right">${r['合計月額料金']?'¥'+Number(r['合計月額料金']).toLocaleString():'—'}</td>
-      <td style="text-align:right">${r['アカウント未利用率']?r['アカウント未利用率']+'%':'—'}</td>
-      <td style="text-align:right">${esc(r['総アカウント数'])||'—'}</td>
-      <td style="text-align:right">${esc(r['有償アカウント数'])||'—'}</td>
-      <td style="text-align:right">${esc(r['無償アカウント数'])||'—'}</td>
-      <td style="text-align:right">${esc(r['シャドーID数'])||'—'}</td>
-      <td>${esc(r['契約の種類'])||'—'}</td>
-      <td>${esc(r['支払いサイクル'])||'—'}</td>
-      <td style="font-size:12px">${esc(toDisplay(r['契約開始日']))||'—'}</td>
-      <td style="font-size:12px">${esc(toDisplay(r['契約更新日']))||'—'} ${renewalBadge}</td>
-      <td>${esc(r['管理部署'])||'—'}</td>
-      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${esc(r['メモ'])||'—'}</td>
-      <td style="font-size:11px;color:#aaa">${esc(r['最終取得日時'])||'—'}</td>
-      <td style="font-size:11px;color:#aaa">${esc(r['追加日時'])||'—'}</td>
+      ${cells}
       <td onclick="event.stopPropagation()"><button class="btn btn-sm" onclick="openEditSw('${esc(r['ソフトウェア名'])}')">編集</button></td>
     </tr>`;
   }).join('');

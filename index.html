@@ -128,10 +128,10 @@ tr:hover td{background:#fafafa}
 
 /* 列固定 */
 .tbl-wrap{position:relative}
-th.sticky-col,td.sticky-col{position:sticky;left:0;z-index:5;background:#f8f8f6}
-td.sticky-col{background:#fff}
+td.sticky-col{position:sticky;left:32px;z-index:5;background:#fff}
 tr:hover td.sticky-col{background:#fafafa}
-th.sticky-col{z-index:15}
+th.sticky-col{position:sticky;top:0;left:32px;z-index:20;background:#f8f8f6}
+.tbl-wrap thead th{position:sticky;top:0;z-index:10;background:#f8f8f6}
 
 /* 列表示パネル */
 .col-vis-wrap{position:relative;display:inline-block}
@@ -445,9 +445,9 @@ function render(){
   const colState=getColVisState();
   const displayCols=headers.filter(h=>h===FIXED_COL||ALWAYS_SHOW.includes(h)||colState[h]!==false);
 
-  document.getElementById('thead').innerHTML=`<tr><th style="width:32px"></th>${displayCols.map((h,i)=>{
+  document.getElementById('thead').innerHTML=`<tr><th style="width:32px;position:sticky;top:0;left:0;z-index:20;background:#f8f8f6"></th>${displayCols.map((h,i)=>{
     const isFixed=h===FIXED_COL;
-    return`<th class="${isFixed?'sticky-col':''}" style="${isFixed?'left:32px;':''}min-width:80px" onclick="setSort('${esc(h)}')">${esc(h)}<span class="sort-arrow">${sortKey===h?(sortDir>0?'▲':'▼'):''}</span></th>`;
+    return`<th class="${isFixed?'sticky-col':''}" style="min-width:80px" onclick="setSort('${esc(h)}')">${esc(h)}<span class="sort-arrow">${sortKey===h?(sortDir>0?'▲':'▼'):''}</span></th>`;
   }).join('')}<th style="width:70px">操作</th></tr>`;
 
   const tbody=document.getElementById('tbody');
@@ -458,12 +458,13 @@ function render(){
     const taskBadge=r['管理者のタスク']&&r['管理者のタスク']!=='なし'?`<span class="badge ${r['管理者のタスク']==='貸出'?'task-lend':'task-return'}">${esc(r['管理者のタスク'])}</span>`:r['管理者のタスク']||'—';
     const cells=displayCols.map((h,i)=>{
       const isFixed=h===FIXED_COL;
-      const stickyStyle=isFixed?` class="sticky-col" style="left:32px"`:'';
-      if(h==='ステータス')return`<td${stickyStyle}>${statusBadge}</td>`;
-      if(h==='管理者のタスク')return`<td${stickyStyle}>${taskBadge}</td>`;
-      if(DATE_FIELDS.includes(h))return`<td${stickyStyle} style="font-size:12px${isFixed?';left:32px':''}">${esc(toDisplay(r[h]))||'—'}</td>`;
-      return`<td${stickyStyle}>${esc((r[h]||'—').toString().substring(0,30))}</td>`;
+      const stickyAttr=isFixed?` class="sticky-col"`:'';
+      if(h==='ステータス')return`<td${stickyAttr}>${statusBadge}</td>`;
+      if(h==='管理者のタスク')return`<td${stickyAttr}>${taskBadge}</td>`;
+      if(DATE_FIELDS.includes(h))return`<td${stickyAttr} style="font-size:12px">${esc(toDisplay(r[h]))||'—'}</td>`;
+      return`<td${stickyAttr}>${esc((r[h]||'—').toString().substring(0,30))}</td>`;
     }).join('');
+    const expandTd=`<td style="text-align:center;color:#aaa;position:sticky;left:0;z-index:4;background:inherit">${expanded.has(r._id)?'▾':'▸'}</td>`;
     const detail=expanded.has(r._id)?`<tr class="row-detail"><td colspan="${displayCols.length+2}"><div class="row-detail-inner">
       <div class="detail-grid">${headers.map(h=>`<div class="di"><label>${esc(h)}</label><span>${DATE_FIELDS.includes(h)?esc(toDisplay(r[h])):esc(r[h])||'—'}</span></div>`).join('')}</div>
       <div style="display:flex;gap:8px">
@@ -472,7 +473,7 @@ function render(){
         <button class="btn btn-sm" onclick="toggleRow(${r._id});event.stopPropagation()">閉じる</button>
       </div>
     </div></td></tr>`:'';
-    return`<tr onclick="toggleRow(${r._id})" style="cursor:pointer"><td style="text-align:center;color:#aaa">${expanded.has(r._id)?'▾':'▸'}</td>${cells}<td onclick="event.stopPropagation()"><button class="btn btn-sm" onclick="openEdit(${r._id})">編集</button></td></tr>${detail}`;
+    return`<tr onclick="toggleRow(${r._id})" style="cursor:pointer">${expandTd}${cells}<td onclick="event.stopPropagation()"><button class="btn btn-sm" onclick="openEdit(${r._id})">編集</button></td></tr>${detail}`;
   }).join('');
 }
 

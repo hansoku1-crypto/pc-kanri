@@ -262,6 +262,8 @@ tr.sw-row:hover td{background:#f5f5f3;cursor:pointer}
         <p id="detail-genre"></p>
       </div>
       <div class="sw-header-right">
+        <span id="sync-status" style="font-size:12px;color:#888"></span>
+        <button class="btn btn-primary" id="sync-btn" onclick="syncCurrentSw()">↺ データ取得</button>
         <button class="btn" onclick="editCurrentSw()">✏ 編集</button>
       </div>
     </div>
@@ -377,6 +379,49 @@ function showMainTab(name){
     document.getElementById('sw-detail').classList.remove('open');
   });
   document.querySelectorAll('.main-tab').forEach((el,i)=>{el.classList.toggle('active',['list','genre','dept'][i]===name);});
+}
+
+
+// ── API同期 ──
+const SW_SYNC_MAP = {
+  'Zoom': 'syncZoom',
+  // 今後追加: 'Microsoft 365': 'syncM365', 'Notion': 'syncNotion'
+};
+
+async function syncCurrentSw() {
+  if (!currentSw) return;
+  const swName = currentSw['ソフトウェア名'];
+  const action = SW_SYNC_MAP[swName];
+  if (!action) {
+    alert(`「${swName}」はまだAPI連携未対応です。`);
+    return;
+  }
+  const btn = document.getElementById('sync-btn');
+  const status = document.getElementById('sync-status');
+  btn.disabled = true;
+  btn.textContent = '取得中...';
+  status.textContent = '';
+  try {
+    const res = await gasPost(action, null, { swName });
+    if (res.error) throw new Error(res.error);
+    status.textContent = `✓ ${res.synced}件取得 (${res.timestamp})`;
+    status.style.color = '#3B6D11';
+    // アカウント一覧を再読み込み
+    await loadAccounts(swName);
+    // ソフトウェア一覧も再読み込み
+    const sw = await gasGet('getSoftwareList');
+    if (!sw.error) {
+      swList = Array.isArray(sw) ? sw : [];
+      currentSw = swList.find(r => r['ソフトウェア名'] === swName) || currentSw;
+      updateUsageSummary();
+    }
+  } catch(e) {
+    status.textContent = 'エラー: ' + e.message;
+    status.style.color = '#c0392b';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '↺ データ取得';
+  }
 }
 
 // ── データ読み込み ──

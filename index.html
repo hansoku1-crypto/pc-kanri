@@ -447,7 +447,8 @@ function render(){
 
   document.getElementById('thead').innerHTML=`<tr>${displayCols.map((h,i)=>{
     const isFixed=h===FIXED_COL;
-    return`<th class="${isFixed?'sticky-col':''}" style="min-width:80px" onclick="setSort('${esc(h)}')">${esc(h)}<span class="sort-arrow">${sortKey===h?(sortDir>0?'▲':'▼'):''}</span></th>`;
+    const style=isFixed?'position:sticky;top:0;left:0;z-index:20;background:#f8f8f6;min-width:80px':'min-width:80px';
+    return`<th style="${style}" onclick="setSort('${esc(h)}')">${esc(h)}<span class="sort-arrow">${sortKey===h?(sortDir>0?'▲':'▼'):''}</span></th>`;
   }).join('')}<th style="width:70px">操作</th></tr>`;
 
   const tbody=document.getElementById('tbody');

@@ -304,7 +304,7 @@ tr.sw-row:hover td{background:#f5f5f3;cursor:pointer}
 </div>
 
 <script>
-const GAS_URL = 'https://script.google.com/macros/s/AKfycby11ubaJ5zmNlNvP_iXxQofudIlkbtaugltwSdgfqBq3sEkcs5eWUf6ukFo8V6eHUqU/exec';
+const GAS_URL = 'YOUR_GAS_URL_HERE'; // ← デプロイ後にURLを貼る
 
 // 状態
 let swList = [], accounts = [], genres = [], depts = [];
@@ -375,7 +375,7 @@ function updateFilters(){
   genres.forEach(g=>{const o=document.createElement('option');o.value=g;o.textContent=g;if(g===curG)o.selected=true;gf.appendChild(o);});
   const df=document.getElementById('f-dept');const curD=df.value;
   df.innerHTML='<option value="">管理部署: すべて</option>';
-  depts.forEach(d=>{const o=document.createElement('option');o.value=d;o.textContent=d;if(d===curD)o.selected=true;df.appendChild(o);});
+  flatDeptOptions(depts).forEach(({value,label})=>{const o=document.createElement('option');o.value=value;o.textContent=label;if(value===curD)o.selected=true;df.appendChild(o);});
 }
 
 function resetFilters(){
@@ -562,7 +562,7 @@ function openEditSw(name){const sw=swList.find(r=>r['ソフトウェア名']===n
 function editCurrentSw(){if(currentSw)showSwModal(currentSw,false);}
 
 function showSwModal(r,isNew){
-  const deptOpts=depts.map(d=>`<option value="${esc(d)}"${r['管理部署']===d?' selected':''}>${esc(d)}</option>`).join('');
+  const deptOpts=flatDeptOptions(depts).map(({value,label})=>`<option value="${esc(value)}"${r['管理部署']===value?' selected':''}>${esc(label)}</option>`).join('');
   const genreOpts=genres.map(g=>`<option value="${esc(g)}"${r['ジャンル']===g?' selected':''}>${esc(g)}</option>`).join('');
   document.getElementById('modal-content').innerHTML=`
     <h2>${isNew?'ソフトウェアを追加':'ソフトウェアを編集'}</h2>
@@ -723,12 +723,41 @@ function renderGenreList(){
 function addGenre(){const input=document.getElementById('genre-new');const val=input.value.trim();if(!val)return;genres.push(val);input.value='';renderGenreList();}
 async function saveGenres(){showInd('saving','保存中...');try{const res=await gasPost('saveGenres',genres);if(res.error)throw new Error(res.error);showInd('saved','ジャンルマスタ保存済み ✓');updateFilters();}catch(e){showInd('error','保存エラー: '+e.message);}}
 
+// 部署をフラットな名前リストに変換（フィルター・セレクト用）
+function getDeptNames(){return depts.map(d=>typeof d==='string'?d:d.name);}
+
+// 階層付き選択肢
+function flatDeptOptions(items,depth=0){
+  const roots=items.filter(d=>(typeof d==='string'?'':d.parent)==='');
+  const opts=[];
+  function walk(nodes,d){nodes.forEach(n=>{const name=typeof n==='string'?n:n.name;opts.push({value:name,label:'　'.repeat(d)+name});const children=items.filter(x=>(typeof x==='string'?'':x.parent)===name);walk(children,d+1);});}
+  walk(roots,depth);
+  return opts;
+}
+
 function renderDeptList(){
   const el=document.getElementById('dept-list');if(!el)return;
-  el.innerHTML=depts.length?depts.map((d,i)=>`<div class="master-item"><span>${esc(d)}</span><button class="btn btn-sm btn-danger" onclick="depts.splice(${i},1);renderDeptList()">削除</button></div>`).join(''):'<p style="font-size:13px;color:#aaa;padding:8px">まだ登録されていません</p>';
+  const names=getDeptNames();
+  el.innerHTML=names.length?names.map((d,i)=>`<div class="master-item"><span>${esc(d)}</span><button class="btn btn-sm btn-danger" onclick="removeDeptSw(${i})">削除</button></div>`).join(''):'<p style="font-size:13px;color:#aaa;padding:8px">まだ登録されていません（ハードウェア管理の部署マスタと共用です）</p>';
 }
-function addDept(){const input=document.getElementById('dept-new');const val=input.value.trim();if(!val)return;depts.push(val);input.value='';renderDeptList();}
-async function saveDepts(){showInd('saving','保存中...');try{const res=await gasPost('saveDepts',depts);if(res.error)throw new Error(res.error);showInd('saved','部署マスタ保存済み ✓');updateFilters();}catch(e){showInd('error','保存エラー: '+e.message);}}
+function removeDeptSw(i){
+  const names=getDeptNames();names.splice(i,1);
+  // deptsからも削除
+  depts=depts.filter((_,idx)=>idx!==i);
+  renderDeptList();updateFilters();
+}
+function addDept(){
+  const input=document.getElementById('dept-new');const val=input.value.trim();if(!val)return;
+  // 文字列またはオブジェクト形式で追加
+  if(depts.length>0&&typeof depts[0]==='object'){depts.push({name:val,parent:''});}
+  else{depts.push(val);}
+  input.value='';renderDeptList();updateFilters();
+}
+async function saveDepts(){
+  showInd('saving','保存中...');
+  try{const res=await gasPost('saveDepts',depts);if(res.error)throw new Error(res.error);showInd('saved','部署マスタ保存済み ✓（ハードウェア管理と共用）');updateFilters();}
+  catch(e){showInd('error','保存エラー: '+e.message);}
+}
 
 // 起動
 reloadAll();

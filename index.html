@@ -128,9 +128,9 @@ tr:hover td{background:#fafafa}
 
 /* 列固定 */
 .tbl-wrap{position:relative}
-td.sticky-col{position:sticky;left:32px;z-index:5;background:#fff}
+td.sticky-col{position:sticky;left:0;z-index:5;background:#fff}
 tr:hover td.sticky-col{background:#fafafa}
-th.sticky-col{position:sticky;top:0;left:32px;z-index:20;background:#f8f8f6}
+th.sticky-col{position:sticky;top:0;left:0;z-index:20;background:#f8f8f6}
 .tbl-wrap thead th{position:sticky;top:0;z-index:10;background:#f8f8f6}
 
 /* 列表示パネル */
@@ -445,7 +445,7 @@ function render(){
   const colState=getColVisState();
   const displayCols=headers.filter(h=>h===FIXED_COL||ALWAYS_SHOW.includes(h)||colState[h]!==false);
 
-  document.getElementById('thead').innerHTML=`<tr><th style="width:32px;position:sticky;top:0;left:0;z-index:20;background:#f8f8f6"></th>${displayCols.map((h,i)=>{
+  document.getElementById('thead').innerHTML=`<tr>${displayCols.map((h,i)=>{
     const isFixed=h===FIXED_COL;
     return`<th class="${isFixed?'sticky-col':''}" style="min-width:80px" onclick="setSort('${esc(h)}')">${esc(h)}<span class="sort-arrow">${sortKey===h?(sortDir>0?'▲':'▼'):''}</span></th>`;
   }).join('')}<th style="width:70px">操作</th></tr>`;
@@ -459,12 +459,15 @@ function render(){
     const cells=displayCols.map((h,i)=>{
       const isFixed=h===FIXED_COL;
       const stickyAttr=isFixed?` class="sticky-col"`:'';
+      if(h===FIXED_COL){
+        const arrow=`<span style="color:#aaa;margin-right:4px;font-size:11px">${expanded.has(r._id)?'▾':'▸'}</span>`;
+        return`<td${stickyAttr}>${arrow}${esc((r[h]||'—').toString().substring(0,30))}</td>`;
+      }
       if(h==='ステータス')return`<td${stickyAttr}>${statusBadge}</td>`;
       if(h==='管理者のタスク')return`<td${stickyAttr}>${taskBadge}</td>`;
       if(DATE_FIELDS.includes(h))return`<td${stickyAttr} style="font-size:12px">${esc(toDisplay(r[h]))||'—'}</td>`;
       return`<td${stickyAttr}>${esc((r[h]||'—').toString().substring(0,30))}</td>`;
     }).join('');
-    const expandTd=`<td style="text-align:center;color:#aaa;position:sticky;left:0;z-index:4;background:inherit">${expanded.has(r._id)?'▾':'▸'}</td>`;
     const detail=expanded.has(r._id)?`<tr class="row-detail"><td colspan="${displayCols.length+2}"><div class="row-detail-inner">
       <div class="detail-grid">${headers.map(h=>`<div class="di"><label>${esc(h)}</label><span>${DATE_FIELDS.includes(h)?esc(toDisplay(r[h])):esc(r[h])||'—'}</span></div>`).join('')}</div>
       <div style="display:flex;gap:8px">
@@ -473,7 +476,7 @@ function render(){
         <button class="btn btn-sm" onclick="toggleRow(${r._id});event.stopPropagation()">閉じる</button>
       </div>
     </div></td></tr>`:'';
-    return`<tr onclick="toggleRow(${r._id})" style="cursor:pointer">${expandTd}${cells}<td onclick="event.stopPropagation()"><button class="btn btn-sm" onclick="openEdit(${r._id})">編集</button></td></tr>${detail}`;
+    return`<tr onclick="toggleRow(${r._id})" style="cursor:pointer">${cells}<td onclick="event.stopPropagation()"><button class="btn btn-sm" onclick="openEdit(${r._id})">編集</button></td></tr>${detail}`;
   }).join('');
 }
 

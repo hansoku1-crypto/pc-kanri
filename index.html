@@ -262,8 +262,8 @@ let currentType='PC',dataByType={},typeConfig={},depts=[],positions=[],taskOptio
 let sortKey='利用開始日',sortDir=-1,expanded=new Set(),currentDateTarget='start';
 
 // ── 列表示設定 ──
-const FIXED_COL = 'ID(PC名)'; // 常に左端固定
-const ALWAYS_SHOW = ['ID(PC名)','ステータス','ユーザー']; // 非表示不可
+const FIXED_COL = 'シリアル番号'; // 常に左端固定
+const ALWAYS_SHOW = ['シリアル番号','ステータス','ユーザー']; // 非表示不可
 
 function getColVisKey(){return 'hw_col_vis_'+currentType;}
 function loadColVis(){

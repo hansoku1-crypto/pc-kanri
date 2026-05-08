@@ -197,6 +197,7 @@ th.sticky-col{z-index:15}
     <button class="main-tab active" onclick="showMainTab('list')">ソフトウェア</button>
     <button class="main-tab" onclick="showMainTab('genre')">ジャンルマスタ</button>
     <button class="main-tab" onclick="showMainTab('dept')">部署マスタ</button>
+    <button class="main-tab" onclick="showMainTab('price')">単価マスタ</button>
     <div class="nav-right">
       <button class="btn" onclick="reloadAll()" id="reload-btn">↺ 再読み込み</button>
       <span class="save-ind" id="save-ind"></span>
@@ -258,6 +259,33 @@ th.sticky-col{z-index:15}
           <div class="add-field"><label>部署名</label><input type="text" id="dept-new-name" placeholder="例：串カツ田中立川店"></div>
           <div class="add-field"><label>親部署（任意）</label><select id="dept-new-parent"><option value="">なし（最上位）</option></select></div>
           <button class="btn btn-primary" onclick="addDept()" style="flex-shrink:0">追加</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 単価マスタ -->
+  <div id="tab-price" style="display:none">
+    <div class="master-panel">
+      <div class="section-header">
+        <h3>ライセンス単価マスタ</h3>
+        <button class="btn btn-primary btn-sm" onclick="savePriceMaster()">スプレッドシートに保存</button>
+      </div>
+      <p style="font-size:12px;color:#aaa;margin-bottom:1rem">ソフトウェアごとのライセンス種別と月額単価を管理します。syncボタンを押すと合計月額料金が自動計算されます。</p>
+      <div id="price-sw-list"></div>
+      <div class="add-form" style="margin-top:1rem">
+        <h4>単価を追加</h4>
+        <div class="add-row">
+          <div class="add-field"><label>ソフトウェア名</label>
+            <select id="price-new-sw"><option value="">選択...</option></select>
+          </div>
+          <div class="add-field"><label>ライセンス種別</label>
+            <input type="text" id="price-new-type" placeholder="例：Licensed, Business Basic">
+          </div>
+          <div class="add-field"><label>月額単価（円）</label>
+            <input type="number" id="price-new-val" placeholder="例：2125" min="0">
+          </div>
+          <button class="btn btn-primary" onclick="addPriceRow()" style="flex-shrink:0">追加</button>
         </div>
       </div>
     </div>
@@ -429,18 +457,20 @@ async function gasPost(action,data,extra={}){
 
 // ── タブ ──
 function showMainTab(name){
-  ['list','genre','dept'].forEach(t=>{
-    document.getElementById('tab-'+t).style.display=t===name?'':'none';
+  ['list','genre','dept','price'].forEach(t=>{
+    const el=document.getElementById('tab-'+t);
+    if(el)el.style.display=t===name?'':'none';
     document.getElementById('sw-detail').classList.remove('open');
   });
-  document.querySelectorAll('.main-tab').forEach((el,i)=>{el.classList.toggle('active',['list','genre','dept'][i]===name);});
+  document.querySelectorAll('.main-tab').forEach((el,i)=>{el.classList.toggle('active',['list','genre','dept','price'][i]===name);});
+  if(name==='price')loadPriceMaster();
 }
 
 
 // ── API同期 ──
 const SW_SYNC_MAP = {
-  'Zoom': 'syncZoom',
-  // 今後追加: 'Microsoft 365': 'syncM365', 'Notion': 'syncNotion'
+  'Zoom':          'syncZoom',
+  'Microsoft 365': 'syncM365',
 };
 
 async function syncCurrentSw() {
@@ -989,6 +1019,119 @@ async function saveDepts(){
 
 // 起動
 reloadAll();
+
+// ── 単価マスタ ────────────────────────────────
+
+let priceMaster = []; // [{swName, licenseType, price}, ...]
+
+async function loadPriceMaster() {
+  try {
+    const res = await gasGet('getAllLicensePrices');
+    priceMaster = Array.isArray(res) ? res : [];
+    renderPriceMaster();
+    // ソフトウェア選択肢を更新
+    const sel = document.getElementById('price-new-sw');
+    if (sel) {
+      sel.innerHTML = '<option value="">選択...</option>'
+        + swList.map(s => `<option value="${esc(s['ソフトウェア名'])}">${esc(s['ソフトウェア名'])}</option>`).join('');
+    }
+  } catch(e) { showInd('error', '単価マスタ読み込みエラー: ' + e.message); }
+}
+
+function renderPriceMaster() {
+  const el = document.getElementById('price-sw-list');
+  if (!el) return;
+
+  // ソフトウェアごとにグループ化
+  const groups = {};
+  priceMaster.forEach(r => {
+    if (!groups[r.swName]) groups[r.swName] = [];
+    groups[r.swName].push(r);
+  });
+
+  if (Object.keys(groups).length === 0) {
+    el.innerHTML = '<p style="color:#aaa;font-size:13px;padding:.5rem">登録されている単価はありません</p>';
+    return;
+  }
+
+  el.innerHTML = Object.entries(groups).map(([swName, rows]) => `
+    <div style="margin-bottom:1.25rem">
+      <div style="font-size:13px;font-weight:600;color:#555;margin-bottom:.5rem;padding:4px 0;border-bottom:0.5px solid #eee">${esc(swName)}</div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr>
+          <th style="text-align:left;padding:5px 8px;color:#888;font-weight:500;font-size:11px;width:50%">ライセンス種別</th>
+          <th style="text-align:right;padding:5px 8px;color:#888;font-weight:500;font-size:11px;width:30%">月額単価（円）</th>
+          <th style="width:80px"></th>
+        </tr></thead>
+        <tbody>
+          ${rows.map((r, i) => `
+          <tr style="border-top:0.5px solid #f0f0ea">
+            <td style="padding:6px 8px">
+              <input type="text" value="${esc(r.licenseType)}" style="font-size:13px;border:0.5px solid #d0d0ca;border-radius:5px;padding:3px 6px;width:100%"
+                onchange="updatePriceRow('${esc(swName)}',${i},'licenseType',this.value)">
+            </td>
+            <td style="padding:6px 8px;text-align:right">
+              <input type="number" value="${r.price}" min="0" style="font-size:13px;border:0.5px solid #d0d0ca;border-radius:5px;padding:3px 6px;width:100%;text-align:right"
+                onchange="updatePriceRow('${esc(swName)}',${i},'price',this.value)">
+            </td>
+            <td style="padding:6px 8px;text-align:center">
+              <button class="btn btn-danger btn-sm" onclick="removePriceRow('${esc(swName)}',${i})">削除</button>
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  `).join('');
+}
+
+function updatePriceRow(swName, idx, field, value) {
+  const rows = priceMaster.filter(r => r.swName === swName);
+  if (rows[idx]) {
+    rows[idx][field] = field === 'price' ? Number(value) : value;
+  }
+}
+
+function removePriceRow(swName, idx) {
+  const rows = priceMaster.filter(r => r.swName === swName);
+  const target = rows[idx];
+  if (!target) return;
+  priceMaster = priceMaster.filter(r => r !== target);
+  renderPriceMaster();
+}
+
+function addPriceRow() {
+  const swName = document.getElementById('price-new-sw').value;
+  const licenseType = document.getElementById('price-new-type').value.trim();
+  const price = Number(document.getElementById('price-new-val').value) || 0;
+  if (!swName) { alert('ソフトウェアを選択してください'); return; }
+  if (!licenseType) { alert('ライセンス種別を入力してください'); return; }
+  priceMaster.push({ swName, licenseType, price });
+  document.getElementById('price-new-type').value = '';
+  document.getElementById('price-new-val').value = '';
+  renderPriceMaster();
+}
+
+async function savePriceMaster() {
+  showInd('saving', '保存中...');
+  try {
+    // ソフトウェアごとに分けて保存
+    const groups = {};
+    priceMaster.forEach(r => {
+      if (!groups[r.swName]) groups[r.swName] = [];
+      groups[r.swName].push({ licenseType: r.licenseType, price: r.price });
+    });
+    for (const [swName, data] of Object.entries(groups)) {
+      const res = await fetch(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'saveLicensePrices', swName, data }),
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+    }
+    showInd('saved', '単価マスタ保存済み ✓');
+  } catch(e) { showInd('error', '保存エラー: ' + e.message); }
+}
 </script>
 </body>
 </html>
